@@ -1,34 +1,15 @@
 
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import {
-  Calendar,
-  Plus,
-  Filter,
-  Search,
-  Download,
-  MapPin,
-  Users,
-  Clock,
-  ChevronLeft,
-  ChevronRight
-} from "lucide-react";
-import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Input } from "@/components/ui/input";
+import { toast } from "@/hooks/use-toast";
 
-interface Formation {
-  id: number;
-  titre: string;
-  type: 'HSE' | 'Métier';
-  date: string;
-  duree: string;
-  lieu: string;
-  participants: number;
-  maxParticipants: number;
-  formateur: string;
-}
+import PlanningHeader from "@/components/planning/PlanningHeader";
+import PlanningFilters from "@/components/planning/PlanningFilters";
+import FormationCard, { Formation } from "@/components/planning/FormationCard";
+import NewFormationDialog from "@/components/planning/NewFormationDialog";
+import FormationDetailsDialog from "@/components/planning/FormationDetailsDialog";
 
+// Données de test étendues avec des champs supplémentaires
 const planningData: Formation[] = [
   {
     id: 1,
@@ -39,7 +20,11 @@ const planningData: Formation[] = [
     lieu: "Site A - Salle 102",
     participants: 8,
     maxParticipants: 12,
-    formateur: "Jean Dupont"
+    formateur: "Jean Dupont",
+    statut: "À venir",
+    dateValidite: "15/03/2025",
+    documentationRequise: true,
+    documentsValides: true
   },
   {
     id: 2,
@@ -50,7 +35,9 @@ const planningData: Formation[] = [
     lieu: "Laboratoire principal",
     participants: 6,
     maxParticipants: 8,
-    formateur: "Marie Martin"
+    formateur: "Marie Martin",
+    statut: "En cours",
+    dateValidite: "18/03/2025"
   },
   {
     id: 3,
@@ -61,163 +48,167 @@ const planningData: Formation[] = [
     lieu: "Atelier technique",
     participants: 12,
     maxParticipants: 15,
-    formateur: "Pierre Dubois"
+    formateur: "Pierre Dubois",
+    statut: "À venir"
+  },
+  {
+    id: 4,
+    titre: "Intervention d'urgence - Déversement",
+    type: "HSE",
+    date: "2024-03-12",
+    duree: "6h",
+    lieu: "Site B - Zone extérieure",
+    participants: 5,
+    maxParticipants: 10,
+    formateur: "Sophie Leroux",
+    statut: "Terminée",
+    dateValidite: "12/03/2026",
+    estUrgente: true
+  },
+  {
+    id: 5,
+    titre: "Accueil sous-traitants",
+    type: "HSE",
+    date: "2024-03-22",
+    duree: "2h",
+    lieu: "Salle de réunion principale",
+    participants: 3,
+    maxParticipants: 20,
+    formateur: "Michel Bernard",
+    statut: "À venir",
+    documentationRequise: true,
+    documentsValides: false,
+    estUrgente: true
   }
 ];
 
 export default function Planning() {
+  const [formations, setFormations] = useState<Formation[]>(planningData);
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('Tous');
+  
+  // Dialogs state
+  const [isNewFormationDialogOpen, setIsNewFormationDialogOpen] = useState(false);
+  const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
+  const [selectedFormation, setSelectedFormation] = useState<Formation | null>(null);
 
-  const monthNames = [
-    "Janvier", "Février", "Mars", "Avril", "Mai", "Juin",
-    "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"
-  ];
-
-  const nextMonth = () => {
-    const newDate = new Date(selectedMonth);
-    newDate.setMonth(selectedMonth.getMonth() + 1);
-    setSelectedMonth(newDate);
+  const nextId = () => {
+    return Math.max(...formations.map(f => f.id)) + 1;
   };
 
-  const prevMonth = () => {
-    const newDate = new Date(selectedMonth);
-    newDate.setMonth(selectedMonth.getMonth() - 1);
-    setSelectedMonth(newDate);
+  const handleNewFormation = () => {
+    setIsNewFormationDialogOpen(true);
   };
 
-  const filteredFormations = planningData.filter(formation => {
+  const handleSaveFormation = (formationData: any) => {
+    const newFormation = {
+      id: nextId(),
+      ...formationData,
+    };
+    
+    setFormations([...formations, newFormation]);
+    toast({
+      title: "Formation ajoutée",
+      description: "La formation a été ajoutée avec succès au planning."
+    });
+  };
+
+  const handleExportPlanning = () => {
+    toast({
+      title: "Export en cours",
+      description: "Le planning est en cours d'exportation..."
+    });
+    // Logique d'export serait implémentée ici
+  };
+
+  const handleViewDetails = (id: number) => {
+    const formation = formations.find(f => f.id === id);
+    if (formation) {
+      setSelectedFormation(formation);
+      setIsDetailsDialogOpen(true);
+    }
+  };
+
+  const handleEditFormation = (id: number) => {
+    toast({
+      title: "Modification",
+      description: `Ouverture de l'éditeur pour la formation #${id}`
+    });
+    // La logique de modification serait implémentée ici
+  };
+
+  const filteredFormations = formations.filter(formation => {
+    // Filtrage par recherche
     const matchesSearch = formation.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
                          formation.formateur.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesType = selectedType === 'Tous' || formation.type === selectedType;
-    return matchesSearch && matchesType;
+    
+    // Filtrage par type
+    const matchesType = selectedType === 'Tous' || 
+                        formation.type === selectedType || 
+                        (selectedType === 'Urgente' && formation.estUrgente);
+    
+    // Filtrage par mois (simplifié, nous utilisons seulement le mois)
+    const formationDate = new Date(formation.date);
+    const matchesMonth = formationDate.getMonth() === selectedMonth.getMonth() && 
+                         formationDate.getFullYear() === selectedMonth.getFullYear();
+    
+    return matchesSearch && matchesType && matchesMonth;
   });
 
   return (
     <Layout>
       <div className="space-y-6">
         {/* En-tête */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center space-y-4 md:space-y-0">
-          <div>
-            <h1 className="text-2xl font-bold text-gray-800">Planning des Formations</h1>
-            <p className="text-gray-500 mt-1">
-              {planningData.length} formations planifiées
-            </p>
-          </div>
-          <div className="flex space-x-3">
-            <Button variant="outline" className="gap-2">
-              <Download className="w-4 h-4" />
-              Exporter
-            </Button>
-            <Button className="gap-2">
-              <Plus className="w-4 h-4" />
-              Nouvelle Formation
-            </Button>
-          </div>
-        </div>
+        <PlanningHeader 
+          formationsCount={formations.length}
+          onNewFormation={handleNewFormation}
+          onExport={handleExportPlanning}
+        />
 
         {/* Filtres et recherche */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-              <Search className="w-5 h-5 text-gray-400" />
-            </div>
-            <Input
-              type="text"
-              placeholder="Rechercher une formation..."
-              className="pl-10"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-          </div>
-          <div className="flex items-center space-x-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <Select
-              value={selectedType}
-              onValueChange={setSelectedType}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Tous les types" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectGroup>
-                  <SelectItem value="Tous">Tous les types</SelectItem>
-                  <SelectItem value="HSE">HSE</SelectItem>
-                  <SelectItem value="Métier">Métier</SelectItem>
-                </SelectGroup>
-              </SelectContent>
-            </Select>
-          </div>
-          <div className="flex items-center justify-between bg-white px-4 py-2 rounded-lg border border-gray-300">
-            <button onClick={prevMonth} className="text-gray-600 hover:text-gray-800">
-              <ChevronLeft className="w-5 h-5" />
-            </button>
-            <span className="font-medium">
-              {monthNames[selectedMonth.getMonth()]} {selectedMonth.getFullYear()}
-            </span>
-            <button onClick={nextMonth} className="text-gray-600 hover:text-gray-800">
-              <ChevronRight className="w-5 h-5" />
-            </button>
-          </div>
-        </div>
+        <PlanningFilters 
+          searchTerm={searchTerm}
+          onSearchChange={setSearchTerm}
+          selectedType={selectedType}
+          onTypeChange={setSelectedType}
+          selectedMonth={selectedMonth}
+          onMonthChange={setSelectedMonth}
+        />
 
         {/* Planning */}
         <div className="bg-white rounded-xl shadow-sm">
           <div className="p-6 space-y-6">
-            {filteredFormations.map((formation) => (
-              <div
-                key={formation.id}
-                className="border border-gray-200 rounded-lg p-6 hover:border-primary transition-colors"
-              >
-                <div className="flex flex-col md:flex-row justify-between gap-4">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <span className={`px-2 py-1 text-xs font-medium rounded ${
-                        formation.type === 'HSE' 
-                          ? 'bg-ctc-hse-light text-ctc-hse' 
-                          : 'bg-ctc-metier-light text-ctc-metier'
-                      }`}>
-                        {formation.type}
-                      </span>
-                      <h3 className="text-lg font-semibold text-gray-900">{formation.titre}</h3>
-                    </div>
-                    <p className="text-sm text-gray-500 mb-4">Formateur: {formation.formateur}</p>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                        {new Date(formation.date).toLocaleDateString('fr-FR')}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                        {formation.duree}
-                      </div>
-                      <div className="flex items-center text-sm text-gray-600">
-                        <MapPin className="w-4 h-4 mr-2 text-gray-400" />
-                        {formation.lieu}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="flex flex-col justify-between items-end">
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Users className="w-4 h-4 mr-2 text-gray-400" />
-                      {formation.participants}/{formation.maxParticipants} participants
-                    </div>
-                    <div className="flex gap-2">
-                      <Button variant="ghost" size="sm">
-                        Détails
-                      </Button>
-                      <Button variant="ghost" size="sm">
-                        Modifier
-                      </Button>
-                    </div>
-                  </div>
-                </div>
+            {filteredFormations.length > 0 ? (
+              filteredFormations.map((formation) => (
+                <FormationCard
+                  key={formation.id}
+                  formation={formation}
+                  onViewDetails={handleViewDetails}
+                  onEdit={handleEditFormation}
+                />
+              ))
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Aucune formation ne correspond à vos critères de recherche.</p>
               </div>
-            ))}
+            )}
           </div>
         </div>
       </div>
+
+      {/* Dialogs */}
+      <NewFormationDialog
+        isOpen={isNewFormationDialogOpen}
+        onClose={() => setIsNewFormationDialogOpen(false)}
+        onSave={handleSaveFormation}
+      />
+
+      <FormationDetailsDialog
+        isOpen={isDetailsDialogOpen}
+        onClose={() => setIsDetailsDialogOpen(false)}
+        formation={selectedFormation}
+      />
     </Layout>
   );
 }
