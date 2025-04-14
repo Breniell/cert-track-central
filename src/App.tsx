@@ -13,7 +13,8 @@ import Formateurs from "./pages/Formateurs";
 import Participants from "./pages/Participants";
 import Planning from "./pages/Planning";
 import NotFound from "./pages/NotFound";
-import Collaboration from "./pages/Collaboration"; // Nouvelle page
+import Collaboration from "./pages/Collaboration";
+import AdminDashboard from "./pages/AdminDashboard"; // Nouvelle page d'administration
 
 // Nouvelles pages pour les formateurs
 import FormateurDashboard from "./pages/formateur/Dashboard";
@@ -43,6 +44,7 @@ const App = () => {
           <Routes>
             {/* Routes administrateur */}
             <Route path="/" element={<Index />} />
+            <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/formations" element={<Formations />} />
             <Route path="/formateurs" element={<Formateurs />} />
             <Route path="/participants" element={<Participants />} />
