@@ -52,6 +52,28 @@ export default {
 					DEFAULT: 'hsl(var(--card))',
 					foreground: 'hsl(var(--card-foreground))'
 				},
+				// Custom color palette for the training management platform
+				ctc: {
+					purple: {
+						light: '#E5DEFF',
+						DEFAULT: '#9b87f5',
+						dark: '#7E69AB',
+						darker: '#6E59A5'
+					},
+					hse: {
+						DEFAULT: '#F97316',
+						light: '#FEC6A1'
+					},
+					metier: {
+						DEFAULT: '#8B5CF6',
+						light: '#D6BCFA'
+					},
+					status: {
+						available: '#22C55E',
+						pending: '#3B82F6',
+						complete: '#9CA3AF'
+					}
+				},
 				sidebar: {
 					DEFAULT: 'hsl(var(--sidebar-background))',
 					foreground: 'hsl(var(--sidebar-foreground))',
