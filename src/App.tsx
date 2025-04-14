@@ -1,13 +1,13 @@
-
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { useState } from "react";
+import { Toaster } from "@/components/ui/toaster";
+import { Toaster as Sonner } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
-// Pages administrateur
+// Pages
 import Index from "./pages/Index";
+import FormationsHSE from "./pages/formations/FormationsHSE";
 import Formations from "./pages/Formations";
 import Formateurs from "./pages/Formateurs";
 import Participants from "./pages/Participants";
@@ -44,8 +44,9 @@ const App = () => {
           <Toaster />
           <Sonner />
           <Routes>
-            {/* Routes administrateur */}
             <Route path="/" element={<Index />} />
+            <Route path="/formations/hse" element={<FormationsHSE />} />
+            {/* Routes administrateur */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/console" element={<AdminConsole />} />
             <Route path="/budget" element={<Budget />} />
@@ -74,7 +75,6 @@ const App = () => {
             <Route path="/hse">
               <Route path="verification-documents" element={<VerificationDocuments />} />
             </Route>
-
             <Route path="*" element={<NotFound />} />
           </Routes>
         </TooltipProvider>
