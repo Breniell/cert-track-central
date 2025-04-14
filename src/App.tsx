@@ -13,6 +13,7 @@ import Formateurs from "./pages/Formateurs";
 import Participants from "./pages/Participants";
 import Planning from "./pages/Planning";
 import NotFound from "./pages/NotFound";
+import Collaboration from "./pages/Collaboration"; // Nouvelle page
 
 // Nouvelles pages pour les formateurs
 import FormateurDashboard from "./pages/formateur/Dashboard";
@@ -26,6 +27,9 @@ import PersonnelHistorique from "./pages/personnel/Historique";
 
 // Nouvelles pages HSE
 import VerificationDocuments from "./pages/hse/VerificationDocuments";
+
+// Nouvelles pages pour les appels d'offres
+import AppelsOffre from "./pages/appeldoffre/AppelsOffre";
 
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
@@ -43,6 +47,8 @@ const App = () => {
             <Route path="/formateurs" element={<Formateurs />} />
             <Route path="/participants" element={<Participants />} />
             <Route path="/planning" element={<Planning />} />
+            <Route path="/appels-offre" element={<AppelsOffre />} />
+            <Route path="/collaboration" element={<Collaboration />} />
 
             {/* Routes formateur */}
             <Route path="/formateur">

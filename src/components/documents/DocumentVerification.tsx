@@ -196,10 +196,9 @@ export default function DocumentVerification({ participantId }: DocumentVerifica
                 </Label>
                 <Select 
                   value={verificationStatus} 
-                  onValueChange={(value) => setVerificationStatus(value as DocumentStatus)}
-                  className="col-span-3"
+                  onValueChange={(value: string) => setVerificationStatus(value as DocumentStatus)}
                 >
-                  <SelectTrigger id="status">
+                  <SelectTrigger id="status" className="col-span-3">
                     <SelectValue placeholder="Sélectionner un statut" />
                   </SelectTrigger>
                   <SelectContent>

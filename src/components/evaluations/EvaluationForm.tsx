@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation } from "@tanstack/react-query";
 import { evaluationService } from "@/services/evaluationService";
 import { Button } from "@/components/ui/button";
@@ -26,14 +26,15 @@ export default function EvaluationForm({ evaluationId, participantId, onComplete
 
   const { data: evaluation, isLoading, error } = useQuery({
     queryKey: ["evaluation", evaluationId],
-    queryFn: () => evaluationService.getEvaluation(evaluationId),
-    onSuccess: (data) => {
-      if (data) {
-        // Initialiser le timer
-        setTimeLeft(data.duree * 60);
-      }
-    }
+    queryFn: () => evaluationService.getEvaluation(evaluationId)
   });
+
+  useEffect(() => {
+    if (evaluation) {
+      // Initialiser le timer
+      setTimeLeft(evaluation.duree * 60);
+    }
+  }, [evaluation]);
 
   const submitEvaluationMutation = useMutation({
     mutationFn: () => {
@@ -69,7 +70,7 @@ export default function EvaluationForm({ evaluationId, participantId, onComplete
   });
 
   // Gestion du timer
-  useState(() => {
+  useEffect(() => {
     if (timeLeft !== null) {
       const timer = setInterval(() => {
         setTimeLeft(prevTime => {
@@ -89,7 +90,7 @@ export default function EvaluationForm({ evaluationId, participantId, onComplete
       
       return () => clearInterval(timer);
     }
-  });
+  }, [timeLeft, isSubmitting]);
 
   const handleAnswerChange = (questionId: number, answer: string | string[]) => {
     setAnswers(prev => ({
