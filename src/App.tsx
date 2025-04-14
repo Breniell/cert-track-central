@@ -34,6 +34,10 @@ import VerificationDocuments from "./pages/hse/VerificationDocuments";
 // Nouvelles pages pour les appels d'offres
 import AppelsOffre from "./pages/appeldoffre/AppelsOffre";
 
+// Imports for new pages
+import FormationsMetiers from "./pages/formations/FormationsMetiers";
+import PlanningGeneral from "./pages/planning/PlanningGeneral";
+
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
 
@@ -45,15 +49,23 @@ const App = () => {
           <Sonner />
           <Routes>
             <Route path="/" element={<Index />} />
+            
+            {/* Routes formations */}
             <Route path="/formations/hse" element={<FormationsHSE />} />
+            <Route path="/formations/metiers" element={<FormationsMetiers />} />
+            <Route path="/formations" element={<Formations />} />
+            
+            {/* Routes planning */}
+            <Route path="/planning" element={<PlanningGeneral />} />
+            
+            {/* Routes formateurs */}
+            <Route path="/formateurs" element={<Formateurs />} />
+            
             {/* Routes administrateur */}
             <Route path="/admin" element={<AdminDashboard />} />
             <Route path="/admin/console" element={<AdminConsole />} />
             <Route path="/budget" element={<Budget />} />
-            <Route path="/formations" element={<Formations />} />
-            <Route path="/formateurs" element={<Formateurs />} />
             <Route path="/participants" element={<Participants />} />
-            <Route path="/planning" element={<Planning />} />
             <Route path="/appels-offre" element={<AppelsOffre />} />
             <Route path="/collaboration" element={<Collaboration />} />
 
