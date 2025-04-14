@@ -1,89 +1,109 @@
 
 import { Button } from "@/components/ui/button";
-import Layout from "@/components/layout/Layout";
-import StatsCards from "@/components/dashboard/StatsCards";
-import RecentActivity from "@/components/dashboard/RecentActivity";
-import { Calendar, AlertTriangle, FileText } from 'lucide-react';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Link } from "react-router-dom";
+import { 
+  BarChart3, 
+  CalendarDays, 
+  ClipboardCheck, 
+  FileText, 
+  MessageSquare, 
+  Shield, 
+  Sliders, 
+  Users 
+} from "lucide-react";
 
 export default function Index() {
-  // Formations qui expirent bientôt
-  const formationsExpirant = [
-    { nom: "Sécurité en hauteur", type: "HSE", participants: 12, expiration: "15 mai 2024" },
-    { nom: "Manipulation des produits chimiques", type: "HSE", participants: 8, expiration: "2 juin 2024" },
-    { nom: "Premiers secours", type: "HSE", participants: 15, expiration: "10 juin 2024" },
+  const modules = [
+    {
+      icon: <BarChart3 className="h-6 w-6" />,
+      title: "Console d'administration",
+      description: "Contrôle central et paramètres avancés de la plateforme",
+      link: "/admin/console",
+      primary: true
+    },
+    {
+      icon: <Users className="h-6 w-6" />,
+      title: "Gestion des formateurs",
+      description: "Gérez les profils et la disponibilité des formateurs",
+      link: "/formateurs"
+    },
+    {
+      icon: <CalendarDays className="h-6 w-6" />,
+      title: "Planning des formations",
+      description: "Calendrier et organisation des sessions de formation",
+      link: "/planning"
+    },
+    {
+      icon: <ClipboardCheck className="h-6 w-6" />,
+      title: "Participants et inscriptions",
+      description: "Suivi des participants et validation des présences",
+      link: "/participants"
+    },
+    {
+      icon: <Shield className="h-6 w-6" />,
+      title: "Vérification documents HSE",
+      description: "Contrôle des documents pour les sous-traitants",
+      link: "/hse/verification-documents"
+    },
+    {
+      icon: <FileText className="h-6 w-6" />,
+      title: "Gestion des appels d'offres",
+      description: "Créez et suivez les appels d'offres pour formations externes",
+      link: "/appels-offre"
+    },
+    {
+      icon: <MessageSquare className="h-6 w-6" />,
+      title: "Espace collaboratif",
+      description: "Forum, messagerie et centre documentaire",
+      link: "/collaboration"
+    },
+    {
+      icon: <Sliders className="h-6 w-6" />,
+      title: "Paramètres et profil",
+      description: "Gérez vos préférences et informations personnelles",
+      link: "/admin"
+    }
   ];
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-          <div>
-            <h1 className="text-2xl font-bold tracking-tight">Tableau de bord</h1>
-            <p className="text-muted-foreground">Vue d'ensemble de la plateforme de formation</p>
-          </div>
-          <div className="flex gap-2">
-            <Button variant="outline" className="gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>Calendrier</span>
-            </Button>
-            <Button className="gap-2">
-              <FileText className="h-4 w-4" />
-              <span>Rapport</span>
-            </Button>
-          </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-6xl mx-auto">
+        <header className="text-center mb-10">
+          <h1 className="text-3xl font-bold text-gray-900 mb-3">Plateforme de Gestion des Formations</h1>
+          <p className="text-gray-600 text-lg">Formations HSE et Métiers | Coordination RH & HSE</p>
+        </header>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {modules.map((module, index) => (
+            <Card 
+              key={index} 
+              className={`overflow-hidden transition-all duration-300 hover:shadow-lg ${
+                module.primary ? 'border-primary/50 bg-primary/5' : ''
+              }`}
+            >
+              <CardHeader className="pb-2">
+                <div className="flex items-center justify-between">
+                  <div className={`p-2 rounded-lg ${module.primary ? 'bg-primary/10 text-primary' : 'bg-gray-100'}`}>
+                    {module.icon}
+                  </div>
+                </div>
+                <CardTitle className="mt-3">{module.title}</CardTitle>
+                <CardDescription>{module.description}</CardDescription>
+              </CardHeader>
+              <CardFooter className="pt-2">
+                <Button asChild className={`w-full ${module.primary ? 'bg-primary hover:bg-primary/90' : ''}`}>
+                  <Link to={module.link}>Accéder</Link>
+                </Button>
+              </CardFooter>
+            </Card>
+          ))}
         </div>
 
-        {/* Statistiques */}
-        <StatsCards />
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Activité récente */}
-          <div className="lg:col-span-2">
-            <RecentActivity />
-          </div>
-
-          {/* Formations expirant bientôt */}
-          <div className="bg-white rounded-xl shadow-sm overflow-hidden">
-            <div className="bg-amber-50 px-6 py-4 border-b border-amber-100 flex items-center gap-2">
-              <AlertTriangle className="h-5 w-5 text-amber-500" />
-              <h2 className="text-lg font-medium text-gray-900">Formations expirant bientôt</h2>
-            </div>
-            <div className="px-6 py-4">
-              <ul className="divide-y divide-gray-200">
-                {formationsExpirant.map((formation, index) => (
-                  <li key={index} className="py-3 first:pt-0 last:pb-0">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-sm font-medium text-gray-900">{formation.nom}</h3>
-                        <div className="mt-1 flex items-center gap-2">
-                          <span className={`px-2 py-0.5 text-xs font-medium rounded ${
-                            formation.type === 'HSE' 
-                              ? 'bg-orange-100 text-orange-700' 
-                              : 'bg-purple-100 text-purple-700'
-                          }`}>
-                            {formation.type}
-                          </span>
-                          <span className="text-xs text-gray-500">
-                            {formation.participants} participants
-                          </span>
-                        </div>
-                      </div>
-                      <span className="text-xs text-red-500 font-medium">
-                        Expire le {formation.expiration}
-                      </span>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-            <div className="border-t border-gray-200 px-6 py-3">
-              <a href="#" className="text-sm font-medium text-primary hover:text-primary/90">
-                Voir toutes les formations à renouveler
-              </a>
-            </div>
-          </div>
-        </div>
+        <footer className="mt-16 text-center text-gray-500 text-sm">
+          <p>© 2024 - Plateforme de Gestion des Formations</p>
+        </footer>
       </div>
-    </Layout>
+    </div>
   );
 }
