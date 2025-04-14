@@ -32,7 +32,7 @@ const FormateursListe = () => {
           <CardHeader>
             <div className="flex items-start justify-between">
               <CardTitle>{formateur.nom}</CardTitle>
-              <Badge variant={formateur.status === "disponible" ? "success" : "secondary"}>
+              <Badge variant={formateur.status === "disponible" ? "default" : "secondary"}>
                 {formateur.status}
               </Badge>
             </div>
