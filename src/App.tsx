@@ -24,6 +24,9 @@ import PersonnelDashboard from "./pages/personnel/Dashboard";
 import PersonnelFormations from "./pages/personnel/Formations";
 import PersonnelHistorique from "./pages/personnel/Historique";
 
+// Nouvelles pages HSE
+import VerificationDocuments from "./pages/hse/VerificationDocuments";
+
 const App = () => {
   const [queryClient] = useState(() => new QueryClient());
 
@@ -53,6 +56,11 @@ const App = () => {
               <Route index element={<PersonnelDashboard />} />
               <Route path="formations" element={<PersonnelFormations />} />
               <Route path="historique" element={<PersonnelHistorique />} />
+            </Route>
+
+            {/* Routes HSE */}
+            <Route path="/hse">
+              <Route path="verification-documents" element={<VerificationDocuments />} />
             </Route>
 
             <Route path="*" element={<NotFound />} />
