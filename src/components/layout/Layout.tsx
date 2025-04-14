@@ -1,6 +1,7 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { 
   Sidebar, 
   SidebarContent, 
@@ -23,9 +24,23 @@ import {
   LayoutDashboardIcon, 
   CalendarIcon,
   LogOutIcon,
-  MenuIcon
+  MenuIcon,
+  ShieldIcon,
+  FileTextIcon,
+  BarChart3Icon,
+  MessageSquareIcon,
+  SettingsIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
 
 interface LayoutProps {
@@ -34,14 +49,73 @@ interface LayoutProps {
 
 export default function Layout({ children }: LayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
 
-  const menuItems = [
-    { name: "Tableau de bord", path: "/", icon: LayoutDashboardIcon },
-    { name: "Formations", path: "/formations", icon: BookOpenIcon },
-    { name: "Formateurs", path: "/formateurs", icon: Users2Icon },
-    { name: "Participants", path: "/participants", icon: UserIcon },
-    { name: "Planning", path: "/planning", icon: CalendarIcon },
-  ];
+  const getInitials = (nom?: string, prenom?: string) => {
+    if (!nom || !prenom) return "U";
+    return `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase();
+  };
+
+  const getRoleMenuItems = () => {
+    if (!user) return [];
+
+    const commonItems = [
+      { name: "Tableau de bord", path: "/", icon: LayoutDashboardIcon },
+    ];
+
+    switch (user.role) {
+      case 'administrateur':
+        return [
+          ...commonItems,
+          { name: "Formations", path: "/formations", icon: BookOpenIcon },
+          { name: "Formateurs", path: "/formateurs", icon: Users2Icon },
+          { name: "Participants", path: "/participants", icon: UserIcon },
+          { name: "Planning", path: "/planning", icon: CalendarIcon },
+          { name: "Admin Console", path: "/admin/console", icon: SettingsIcon },
+          { name: "Budget", path: "/budget", icon: BarChart3Icon },
+        ];
+      case 'formateur':
+        return [
+          { name: "Tableau de bord", path: "/formateur", icon: LayoutDashboardIcon },
+          { name: "Mes formations", path: "/formateur/formations", icon: BookOpenIcon },
+          { name: "Mon planning", path: "/formateur/planning", icon: CalendarIcon },
+        ];
+      case 'personnel':
+        return [
+          { name: "Tableau de bord", path: "/personnel", icon: LayoutDashboardIcon },
+          { name: "Catalogue formations", path: "/personnel/formations", icon: BookOpenIcon },
+          { name: "Mon historique", path: "/personnel/historique", icon: FileTextIcon },
+        ];
+      case 'sous-traitant':
+        return [
+          { name: "Tableau de bord", path: "/personnel", icon: LayoutDashboardIcon },
+          { name: "Catalogue formations", path: "/personnel/formations", icon: BookOpenIcon },
+        ];
+      case 'hse':
+        return [
+          ...commonItems,
+          { name: "Formations HSE", path: "/formations/hse", icon: ShieldIcon },
+          { name: "Vérification documents", path: "/hse/verification-documents", icon: FileTextIcon },
+        ];
+      case 'rh':
+        return [
+          ...commonItems,
+          { name: "Formations", path: "/formations", icon: BookOpenIcon },
+          { name: "Participants", path: "/participants", icon: UserIcon },
+          { name: "Planning", path: "/planning", icon: CalendarIcon },
+          { name: "Budget", path: "/budget", icon: BarChart3Icon },
+        ];
+      default:
+        return commonItems;
+    }
+  };
+
+  const menuItems = getRoleMenuItems();
+
+  const handleLogout = async () => {
+    await logout();
+  };
 
   return (
     <SidebarProvider>
@@ -78,7 +152,10 @@ export default function Layout({ children }: LayoutProps) {
           <SidebarFooter>
             <SidebarMenu>
               <SidebarMenuItem>
-                <SidebarMenuButton className="text-destructive hover:text-destructive">
+                <SidebarMenuButton 
+                  className="text-destructive hover:text-destructive"
+                  onClick={handleLogout}
+                >
                   <LogOutIcon className="h-5 w-5 mr-3" />
                   <span>Se déconnecter</span>
                 </SidebarMenuButton>
@@ -144,6 +221,13 @@ export default function Layout({ children }: LayoutProps) {
                   <span>{item.name}</span>
                 </Link>
               ))}
+              <button
+                onClick={handleLogout}
+                className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent text-destructive w-full text-left mt-4"
+              >
+                <LogOutIcon className="h-5 w-5" />
+                <span>Se déconnecter</span>
+              </button>
             </nav>
           </div>
         </div>
@@ -172,12 +256,51 @@ export default function Layout({ children }: LayoutProps) {
                 </div>
               </div>
               <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <div className="h-8 w-8 rounded-full bg-primary/20 flex items-center justify-center text-primary">
-                    <UserIcon className="h-4 w-4" />
-                  </div>
-                  <span className="text-sm font-medium">Admin</span>
-                </div>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-8 w-8 rounded-full">
+                      <Avatar className="h-8 w-8">
+                        <AvatarFallback className="bg-primary/20 text-primary">
+                          {user ? getInitials(user.nom, user.prenom) : "U"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">
+                          {user ? `${user.prenom} ${user.nom}` : "Utilisateur"}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                          {user ? user.email : ""}
+                        </p>
+                        <p className="text-xs leading-none text-muted-foreground capitalize mt-1">
+                          {user ? user.role : ""}
+                        </p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      onClick={() => navigate("/profile")}
+                    >
+                      Mon profil
+                    </DropdownMenuItem>
+                    <DropdownMenuItem
+                      onClick={() => navigate("/parametres")}
+                    >
+                      Paramètres
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem
+                      className="text-destructive"
+                      onClick={handleLogout}
+                    >
+                      <LogOutIcon className="mr-2 h-4 w-4" />
+                      <span>Se déconnecter</span>
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </header>
