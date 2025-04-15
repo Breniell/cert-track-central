@@ -37,5 +37,16 @@ export const appelOffreSchema = z.object({
 
 export type AppelOffreFormData = z.infer<typeof appelOffreSchema>;
 
-// Type for field arrays specifically for react-hook-form typing
-export type FieldArrayPath = "documents" | "criteres.qualification" | "criteres.autres";
+// Create a type that correctly represents field array paths with their exact types
+export type FieldArrayWithCorrectType = {
+  "documents": {
+    nom: string;
+    obligatoire: boolean;
+    url?: string;
+  };
+  "criteres.qualification": string;
+  "criteres.autres": string;
+};
+
+// Type for field arrays with proper typing
+export type FieldArrayPath = keyof FieldArrayWithCorrectType;
