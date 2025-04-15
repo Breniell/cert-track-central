@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -19,7 +20,7 @@ import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
-// Type for document
+// Type for document with required fields matching the service
 type Document = {
   nom: string;
   obligatoire: boolean;
@@ -97,28 +98,30 @@ export default function NouvelAppelOffre() {
     defaultValues,
   });
 
-  // Setting up field arrays for each section
+  // Setting up field arrays for documents
   const { fields: documentFields, append: appendDocument, remove: removeDocument } = 
     useFieldArray({
       control,
       name: "documents",
     });
 
+  // Setting up field arrays for qualifications
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
-      name: "criteres.qualification" as any,
+      name: "criteres.qualification",
     });
 
+  // Setting up field arrays for other criteria
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
     useFieldArray({
       control,
-      name: "criteres.autres" as any,
+      name: "criteres.autres",
     });
 
   const onSubmit = async (data: AppelOffreFormData) => {
     try {
-      // Ensure all required fields are defined
+      // Ensure all required fields are defined and properly typed
       const formattedData = {
         reference: data.reference,
         titre: data.titre,
@@ -134,7 +137,12 @@ export default function NouvelAppelOffre() {
           delai: data.criteres.delai,
           autres: data.criteres.autres || [],
         },
-        documents: data.documents,
+        // Ensure documents meet the required structure
+        documents: data.documents.map(doc => ({
+          nom: doc.nom,  // Required field
+          obligatoire: doc.obligatoire,  // Required field
+          url: doc.url || "",  // Optional field
+        })),
         departementDemandeur: data.departementDemandeur,
         responsableDemande: data.responsableDemande,
       };
