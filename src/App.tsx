@@ -44,6 +44,11 @@ import NouvelAppelOffre from "./pages/appeldoffre/NouvelAppelOffre";
 import FormationsMetiers from "./pages/formations/FormationsMetiers";
 import PlanningGeneral from "./pages/planning/PlanningGeneral";
 
+// New pages for advanced features
+import FormateurProfile from "./pages/formateurs/FormateurProfile";
+import EvaluationManager from "./pages/evaluations/EvaluationManager";
+import BudgetManager from "./pages/budget/BudgetManager";
+
 // Route protégée par authentification
 const ProtectedRoute = ({ element, requiredRole }: { element: JSX.Element, requiredRole?: string[] }) => {
   const { user, isLoading } = useAuth();
@@ -76,10 +81,13 @@ const AppRoutes = () => {
       <Route path="/formations" element={<ProtectedRoute element={<Formations />} />} />
       <Route path="/planning" element={<ProtectedRoute element={<PlanningGeneral />} />} />
       <Route path="/formateurs" element={<ProtectedRoute element={<Formateurs />} requiredRole={['administrateur', 'rh']} />} />
+      <Route path="/formateurs/:id" element={<ProtectedRoute element={<FormateurProfile />} requiredRole={['administrateur', 'rh']} />} />
       <Route path="/admin" element={<ProtectedRoute element={<AdminDashboard />} requiredRole={['administrateur']} />} />
       <Route path="/admin/console" element={<ProtectedRoute element={<AdminConsole />} requiredRole={['administrateur']} />} />
       <Route path="/budget" element={<ProtectedRoute element={<Budget />} requiredRole={['administrateur', 'rh']} />} />
+      <Route path="/budget/manager" element={<ProtectedRoute element={<BudgetManager />} requiredRole={['administrateur', 'rh']} />} />
       <Route path="/participants" element={<ProtectedRoute element={<Participants />} />} />
+      <Route path="/evaluations" element={<ProtectedRoute element={<EvaluationManager />} requiredRole={['administrateur', 'formateur', 'rh']} />} />
       
       {/* Routes Appels d'offre */}
       <Route path="/appels-offre" element={<ProtectedRoute element={<AppelsOffre />} />} />
