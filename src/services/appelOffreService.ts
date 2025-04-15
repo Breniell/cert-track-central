@@ -305,9 +305,9 @@ export const appelOffreService = {
         if (appelsOffreData[index].prestataires) {
           const prestataires = appelsOffreData[index].prestataires.map(p => {
             if (p.id === prestataireId) {
-              return { ...p, statut: 'Sélectionné' };
+              return { ...p, statut: 'Sélectionné' as const };
             } else if (p.statut === 'A répondu') {
-              return { ...p, statut: 'Rejeté' };
+              return { ...p, statut: 'Rejeté' as const };
             }
             return p;
           });
