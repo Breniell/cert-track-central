@@ -77,6 +77,13 @@ export default function FormateurProfile() {
     }
   };
 
+  // Helper function to calculate average score
+  const calculateAverageScore = (evaluations: any[] | undefined) => {
+    if (!evaluations || evaluations.length === 0) return "N/A";
+    const sum = evaluations.reduce((total, eval) => total + eval.score, 0);
+    return (sum / evaluations.length).toFixed(1);
+  };
+
   if (isLoading) {
     return (
       <Layout>
@@ -100,6 +107,8 @@ export default function FormateurProfile() {
       </Layout>
     );
   }
+
+  const averageScore = calculateAverageScore(formateur.evaluations);
 
   return (
     <Layout>
@@ -147,9 +156,7 @@ export default function FormateurProfile() {
                 </div>
                 <div className="flex items-center gap-2">
                   <Star className="h-4 w-4 text-yellow-500" />
-                  <span>Évaluation moyenne: {formateur.evaluations && formateur.evaluations.length > 0 
-                    ? (formateur.evaluations.reduce((sum, eval) => sum + eval.score, 0) / formateur.evaluations.length).toFixed(1) 
-                    : "N/A"}/5</span>
+                  <span>Évaluation moyenne: {averageScore}/5</span>
                 </div>
               </div>
             </CardContent>
@@ -386,9 +393,7 @@ export default function FormateurProfile() {
                       <div className="flex justify-center items-center p-6 bg-gray-50 rounded-md">
                         <div className="text-center">
                           <div className="text-4xl font-bold text-blue-600">
-                            {formateur.evaluations && formateur.evaluations.length > 0 
-                              ? (formateur.evaluations.reduce((sum, eval) => sum + eval.score, 0) / formateur.evaluations.length).toFixed(1) 
-                              : "N/A"}
+                            {averageScore}
                           </div>
                           <div className="flex justify-center my-2">
                             {[1, 2, 3, 4, 5].map((star) => (
@@ -396,7 +401,7 @@ export default function FormateurProfile() {
                                 key={star} 
                                 className={`h-5 w-5 ${
                                   formateur.evaluations && 
-                                  (formateur.evaluations.reduce((sum, eval) => sum + eval.score, 0) / formateur.evaluations.length) >= star 
+                                  parseFloat(averageScore) >= star 
                                     ? "text-yellow-400 fill-yellow-400" 
                                     : "text-gray-300"
                                 }`} 

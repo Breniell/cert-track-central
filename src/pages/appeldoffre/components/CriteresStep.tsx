@@ -16,14 +16,14 @@ interface CriteresStepProps {
 export function CriteresStep({ control }: CriteresStepProps) {
   // Use useFieldArray to manage dynamic arrays of qualification criteria
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
-    useFieldArray<AppelOffreFormData, "criteres.qualification", "id">({
+    useFieldArray({
       control,
       name: "criteres.qualification",
     });
 
   // Use useFieldArray to manage dynamic arrays of other criteria
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
-    useFieldArray<AppelOffreFormData, "criteres.autres", "id">({
+    useFieldArray({
       control,
       name: "criteres.autres",
     });
@@ -84,7 +84,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendQualification("" as QualificationItem)}
+            onClick={() => appendQualification("")}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -136,7 +136,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendAutre("" as AutreItem)}
+            onClick={() => appendAutre("")}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />

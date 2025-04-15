@@ -3,419 +3,285 @@ import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { 
+  PieChart, Pie, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, Cell, ResponsiveContainer 
+} from "recharts";
+import { DatePickerWithRange } from "@/components/ui/date-range-picker";
+import { addDays } from "date-fns";
 import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Calendar } from "@/components/ui/calendar";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { format } from "date-fns";
-import { fr } from "date-fns/locale";
-import { CalendarIcon, ChevronRight, Download, FileText, PieChart, TrendingUp, DollarSign, BarChart3, Search } from "lucide-react";
+import { Download, FileSpreadsheet, Calendar } from "lucide-react";
 import { budgetService } from "@/services/budgetService";
-import { useQuery } from "@tanstack/react-query";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { DateRange } from "react-day-picker";
+
+const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884d8'];
 
 export default function BudgetManager() {
-  const [activeTab, setActiveTab] = useState("budget");
-  const [dateRange, setDateRange] = useState<{
-    from: Date | undefined;
-    to: Date | undefined;
-  }>({
-    from: new Date(2024, 0, 1), // Jan 1, 2024
-    to: new Date(2024, 11, 31), // Dec 31, 2024
+  // Définir la période par défaut sur les 3 derniers mois
+  const [dateRange, setDateRange] = useState<{ from: Date; to: Date }>({
+    from: addDays(new Date(), -90),
+    to: new Date(),
   });
-
-  const { data: budgetReport, isLoading } = useQuery({
-    queryKey: ['budgetReport', dateRange],
-    queryFn: () => budgetService.generateBudgetReport(
-      dateRange.from ? format(dateRange.from, 'yyyy-MM-dd') : '2024-01-01',
-      dateRange.to ? format(dateRange.to, 'yyyy-MM-dd') : '2024-12-31'
-    ),
+  
+  const [activeTab, setActiveTab] = useState('overview');
+  const [departmentFilter, setDepartmentFilter] = useState('all');
+  
+  // Simuler des données budgétaires (à remplacer par des données réelles provenant de l'API)
+  const budgetData = budgetService.getBudgetOverview();
+  
+  // Filtrer les données en fonction de la période sélectionnée
+  const filteredData = budgetData.filter(item => {
+    const itemDate = new Date(item.date);
+    return itemDate >= dateRange.from && itemDate <= dateRange.to;
   });
+  
+  // Données pour le graphique en camembert (répartition des dépenses par type)
+  const pieData = [
+    { name: 'Formations HSE', value: 45000000 },
+    { name: 'Formations Métiers', value: 32000000 },
+    { name: 'Formateurs Externes', value: 18000000 },
+    { name: 'Location Salles', value: 5000000 },
+    { name: 'Matériel Pédagogique', value: 2000000 },
+  ];
+  
+  // Données pour le graphique en barres (évolution mensuelle)
+  const barData = [
+    { month: 'Jan', depenses: 8500000, budget: 10000000 },
+    { month: 'Fév', depenses: 9200000, budget: 10000000 },
+    { month: 'Mars', depenses: 11000000, budget: 10000000 },
+    { month: 'Avr', depenses: 9800000, budget: 10000000 },
+    { month: 'Mai', depenses: 10200000, budget: 12000000 },
+    { month: 'Juin', depenses: 12500000, budget: 12000000 },
+  ];
 
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (range?.from) {
+      setDateRange({ 
+        from: range.from, 
+        to: range.to || range.from 
+      });
+    }
+  };
+  
   return (
     <Layout>
-      <div className="p-6">
-        <div className="flex justify-between items-start mb-6">
+      <div className="container mx-auto py-6">
+        <div className="flex justify-between items-center mb-6">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <DollarSign className="h-6 w-6" />
-              Gestion Budgétaire
-            </h1>
-            <p className="text-muted-foreground">
-              Suivi des coûts, analyse et ROI des formations
-            </p>
+            <h1 className="text-3xl font-bold">Gestion du Budget</h1>
+            <p className="text-muted-foreground">Suivi des dépenses et analyse budgétaire des formations</p>
           </div>
-          <div className="flex gap-2">
-            <Popover>
-              <PopoverTrigger asChild>
-                <Button variant="outline" className="w-[280px] justify-start text-left font-normal">
-                  <CalendarIcon className="mr-2 h-4 w-4" />
-                  {dateRange.from ? (
-                    dateRange.to ? (
-                      <>
-                        {format(dateRange.from, "P", { locale: fr })} - {format(dateRange.to, "P", { locale: fr })}
-                      </>
-                    ) : (
-                      format(dateRange.from, "P", { locale: fr })
-                    )
-                  ) : (
-                    "Sélectionner une période"
-                  )}
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0" align="end">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange.from}
-                  selected={dateRange}
-                  onSelect={(range) => setDateRange(range || { from: undefined, to: undefined })}
-                  numberOfMonths={2}
-                />
-              </PopoverContent>
-            </Popover>
-            <Button>
-              <FileText className="h-4 w-4 mr-2" />
-              Exporter
-            </Button>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <DatePickerWithRange 
+                date={dateRange} 
+                onDateChange={handleDateRangeChange} 
+              />
+            </div>
+            <Select value={departmentFilter} onValueChange={setDepartmentFilter}>
+              <SelectTrigger className="w-[180px]">
+                <SelectValue placeholder="Tous les départements" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Tous les départements</SelectItem>
+                <SelectItem value="production">Production</SelectItem>
+                <SelectItem value="maintenance">Maintenance</SelectItem>
+                <SelectItem value="hse">HSE</SelectItem>
+                <SelectItem value="rh">Ressources Humaines</SelectItem>
+              </SelectContent>
+            </Select>
           </div>
         </div>
-
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsList className="mb-4">
-            <TabsTrigger value="budget">Tableau de bord budget</TabsTrigger>
-            <TabsTrigger value="detail">Détail des coûts</TabsTrigger>
+        
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Budget Total Formations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">102.000.000 FCFA</div>
+              <p className="text-xs text-muted-foreground">Exercice 2024-2025</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Dépenses Actuelles</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">61.200.000 FCFA</div>
+              <p className="text-xs text-muted-foreground">60% du budget utilisé</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-sm font-medium">Coût Moyen par Formation</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">1.750.000 FCFA</div>
+              <p className="text-xs text-muted-foreground">35 formations réalisées</p>
+            </CardContent>
+          </Card>
+        </div>
+        
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+          <TabsList className="mb-6">
+            <TabsTrigger value="overview">Vue d'ensemble</TabsTrigger>
+            <TabsTrigger value="details">Détails des dépenses</TabsTrigger>
             <TabsTrigger value="roi">Analyse ROI</TabsTrigger>
-            <TabsTrigger value="prevision">Prévisions</TabsTrigger>
+            <TabsTrigger value="forecast">Prévisions</TabsTrigger>
           </TabsList>
           
-          <TabsContent value="budget">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Coût Total</CardTitle>
-                  <CardDescription>Période sélectionnée</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">
-                    {isLoading ? (
-                      "Chargement..."
-                    ) : (
-                      `${budgetReport?.coutTotal.toLocaleString()} FCFA`
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    {budgetReport?.formationsRealisees || 0} formations
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Coût par Formation</CardTitle>
-                  <CardDescription>Moyenne</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">
-                    {isLoading ? (
-                      "Chargement..."
-                    ) : (
-                      `${budgetReport?.coutMoyenParFormation.toLocaleString()} FCFA`
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Min: {isLoading ? "..." : "435,000"} FCFA | Max: {isLoading ? "..." : "950,000"} FCFA
-                  </p>
-                </CardContent>
-              </Card>
-              
-              <Card>
-                <CardHeader className="pb-2">
-                  <CardTitle className="text-lg">Coût par Participant</CardTitle>
-                  <CardDescription>Moyenne</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="text-3xl font-bold">
-                    {isLoading ? (
-                      "Chargement..."
-                    ) : (
-                      `${budgetReport?.coutMoyenParParticipant.toLocaleString()} FCFA`
-                    )}
-                  </div>
-                  <p className="text-sm text-muted-foreground">
-                    Basé sur 45 participants
-                  </p>
-                </CardContent>
-              </Card>
-            </div>
-            
+          <TabsContent value="overview">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <Card>
                 <CardHeader>
-                  <CardTitle>Répartition des coûts par type</CardTitle>
+                  <CardTitle>Répartition du Budget</CardTitle>
                   <CardDescription>
-                    Distribution du budget par catégorie de formation
+                    Répartition des dépenses par catégorie
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] flex items-center justify-center">
-                    <div className="text-center">
-                      <PieChart className="h-24 w-24 mx-auto mb-4 text-muted-foreground opacity-30" />
-                      <p className="text-muted-foreground">Graphique de répartition des coûts</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 mt-4">
-                    {isLoading ? (
-                      <p>Chargement des données...</p>
-                    ) : (
-                      budgetReport?.coutParType.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <div className={`w-3 h-3 rounded-full ${
-                              index === 0 ? "bg-blue-500" : index === 1 ? "bg-green-500" : "bg-amber-500"
-                            }`}></div>
-                            <span>{item.type}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <span>{item.montant.toLocaleString()} FCFA</span>
-                            <Badge variant="outline">{item.pourcentage}%</Badge>
-                          </div>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                <CardContent className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <PieChart>
+                      <Pie
+                        data={pieData}
+                        cx="50%"
+                        cy="50%"
+                        labelLine={false}
+                        outerRadius={100}
+                        fill="#8884d8"
+                        dataKey="value"
+                        label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}
+                      >
+                        {pieData.map((entry, index) => (
+                          <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                        ))}
+                      </Pie>
+                      <Tooltip formatter={(value) => `${Number(value).toLocaleString()} FCFA`} />
+                      <Legend />
+                    </PieChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
               
               <Card>
                 <CardHeader>
-                  <CardTitle>Évolution des coûts</CardTitle>
+                  <CardTitle>Évolution Mensuelle</CardTitle>
                   <CardDescription>
-                    Tendance mensuelle des dépenses de formation
+                    Dépenses mensuelles vs budget alloué
                   </CardDescription>
                 </CardHeader>
-                <CardContent>
-                  <div className="h-[300px] flex items-center justify-center">
-                    <div className="text-center">
-                      <BarChart3 className="h-24 w-24 mx-auto mb-4 text-muted-foreground opacity-30" />
-                      <p className="text-muted-foreground">Graphique d'évolution des coûts</p>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-2 mt-4">
-                    {isLoading ? (
-                      <p>Chargement des données...</p>
-                    ) : (
-                      budgetReport?.coutParMois.map((item, index) => (
-                        <div key={index} className="flex items-center justify-between">
-                          <span>{item.mois}</span>
-                          <span>{item.montant.toLocaleString()} FCFA</span>
-                        </div>
-                      ))
-                    )}
-                  </div>
+                <CardContent className="h-80">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart
+                      data={barData}
+                      margin={{
+                        top: 5,
+                        right: 30,
+                        left: 20,
+                        bottom: 5,
+                      }}
+                    >
+                      <CartesianGrid strokeDasharray="3 3" />
+                      <XAxis dataKey="month" />
+                      <YAxis tickFormatter={(value) => `${value / 1000000}M`} />
+                      <Tooltip formatter={(value) => `${Number(value).toLocaleString()} FCFA`} />
+                      <Legend />
+                      <Bar dataKey="depenses" name="Dépenses" fill="#8884d8" />
+                      <Bar dataKey="budget" name="Budget" fill="#82ca9d" />
+                    </BarChart>
+                  </ResponsiveContainer>
                 </CardContent>
               </Card>
             </div>
           </TabsContent>
           
-          <TabsContent value="detail">
+          <TabsContent value="details">
             <Card>
               <CardHeader>
-                <CardTitle>Détail des coûts par formation</CardTitle>
-                <CardDescription>
-                  Analyse détaillée des dépenses par formation
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="relative flex-1 max-w-md">
-                    <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-                    <Input
-                      type="search"
-                      placeholder="Rechercher une formation..."
-                      className="pl-8"
-                    />
+                <div className="flex justify-between items-center">
+                  <div>
+                    <CardTitle>Détail des Dépenses</CardTitle>
+                    <CardDescription>Liste des dépenses par formation</CardDescription>
                   </div>
                   <div className="flex gap-2">
-                    <Select>
-                      <SelectTrigger className="w-[180px]">
-                        <SelectValue placeholder="Type de formation" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">Tous les types</SelectItem>
-                        <SelectItem value="hse">HSE</SelectItem>
-                        <SelectItem value="metier">Métier</SelectItem>
-                        <SelectItem value="urgente">Urgente</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <Button variant="outline" size="sm">
+                      <FileSpreadsheet className="h-4 w-4 mr-2" />
+                      Exporter en Excel
+                    </Button>
+                    <Button variant="outline" size="sm">
+                      <Calendar className="h-4 w-4 mr-2" />
+                      Filtrer par date
+                    </Button>
                   </div>
                 </div>
-                
-                <div className="border rounded-md overflow-hidden">
+              </CardHeader>
+              <CardContent>
+                <div className="rounded-md border">
                   <table className="min-w-full divide-y divide-gray-200">
                     <thead className="bg-gray-50">
                       <tr>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formation</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formateur</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Département</th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coût</th>
                         <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Participants</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Coût total</th>
-                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
                       </tr>
                     </thead>
                     <tbody className="bg-white divide-y divide-gray-200">
                       <tr>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">Sécurité en hauteur</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge>HSE</Badge>
+                          <div className="text-sm text-gray-900">Sécurité en hauteur</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">15/03/2025</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">Jean Dupont</div>
+                          <div className="text-sm text-gray-900">Production</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">8</div>
+                          <div className="text-sm text-gray-900">1.850.000 FCFA</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium">475,000 FCFA</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Button variant="ghost" size="sm">
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
+                          <div className="text-sm text-gray-900">12</div>
                         </td>
                       </tr>
                       <tr>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">Manipulation des produits chimiques</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge>HSE</Badge>
+                          <div className="text-sm text-gray-900">Manipulation produits chimiques</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
                           <div className="text-sm text-gray-900">18/03/2025</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">Marie Martin</div>
+                          <div className="text-sm text-gray-900">HSE</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">6</div>
+                          <div className="text-sm text-gray-900">2.150.000 FCFA</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium">435,000 FCFA</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Button variant="ghost" size="sm">
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
+                          <div className="text-sm text-gray-900">15</div>
                         </td>
                       </tr>
                       <tr>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium text-gray-900">Maintenance préventive</div>
+                          <div className="text-sm text-gray-900">Leadership et Management</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <Badge variant="secondary">Métier</Badge>
+                          <div className="text-sm text-gray-900">22/03/2025</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">20/03/2025</div>
+                          <div className="text-sm text-gray-900">RH</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">Pierre Dubois</div>
+                          <div className="text-sm text-gray-900">3.250.000 FCFA</div>
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm text-gray-900">12</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap">
-                          <div className="text-sm font-medium">950,000 FCFA</div>
-                        </td>
-                        <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                          <Button variant="ghost" size="sm">
-                            <ChevronRight className="h-4 w-4" />
-                          </Button>
+                          <div className="text-sm text-gray-900">8</div>
                         </td>
                       </tr>
                     </tbody>
                   </table>
-                </div>
-              </CardContent>
-            </Card>
-            
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle>Répartition des coûts par poste</CardTitle>
-                <CardDescription>
-                  Analyse des différentes composantes du budget
-                </CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <div className="h-64 flex items-center justify-center">
-                      <div className="text-center">
-                        <PieChart className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
-                        <p className="text-muted-foreground">Graphique de répartition par poste</p>
-                      </div>
-                    </div>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Formateurs</span>
-                        <span>950,000 FCFA (51%)</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: "51%" }}></div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Matériel</span>
-                        <span>275,000 FCFA (15%)</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-green-500 h-2.5 rounded-full" style={{ width: "15%" }}></div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Salles</span>
-                        <span>320,000 FCFA (17%)</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-amber-500 h-2.5 rounded-full" style={{ width: "17%" }}></div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="flex justify-between items-center">
-                        <span className="text-sm font-medium">Restauration</span>
-                        <span>315,000 FCFA (17%)</span>
-                      </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2.5">
-                        <div className="bg-red-500 h-2.5 rounded-full" style={{ width: "17%" }}></div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="flex justify-end mt-6">
-                  <Button variant="outline">
-                    <Download className="h-4 w-4 mr-2" />
-                    Exporter les données
-                  </Button>
                 </div>
               </CardContent>
             </Card>
@@ -424,406 +290,178 @@ export default function BudgetManager() {
           <TabsContent value="roi">
             <Card>
               <CardHeader>
-                <CardTitle>Analyse du Retour sur Investissement</CardTitle>
-                <CardDescription>
-                  Évaluation de l'impact financier des formations
-                </CardDescription>
+                <CardTitle>Analyse de Retour sur Investissement</CardTitle>
+                <CardDescription>Évaluation de l'impact financier des formations</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Investissement Total</CardTitle>
-                      <CardDescription>Période sélectionnée</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold">1,860,000 FCFA</div>
-                    </CardContent>
-                  </Card>
+                <div className="space-y-8">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="rounded-lg border p-4">
+                      <h3 className="text-sm font-medium mb-2">ROI Global</h3>
+                      <p className="text-2xl font-bold text-green-600">142%</p>
+                      <p className="text-xs text-muted-foreground">Estimation sur 12 mois</p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <h3 className="text-sm font-medium mb-2">Économies Générées</h3>
+                      <p className="text-2xl font-bold">87.500.000 FCFA</p>
+                      <p className="text-xs text-muted-foreground">Réduction des incidents et arrêts</p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <h3 className="text-sm font-medium mb-2">Productivité Améliorée</h3>
+                      <p className="text-2xl font-bold">+18%</p>
+                      <p className="text-xs text-muted-foreground">Augmentation moyenne</p>
+                    </div>
+                  </div>
                   
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Bénéfices Estimés</CardTitle>
-                      <CardDescription>Impact sur la productivité</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold">2,790,000 FCFA</div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">ROI Global</CardTitle>
-                      <CardDescription>Retour sur investissement</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-green-600">+50%</div>
-                      <p className="text-sm text-muted-foreground">
-                        Période d'amortissement: 8 mois
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>ROI par Type de Formation</CardTitle>
-                      <CardDescription>
-                        Comparaison des retours par catégorie
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="space-y-4">
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">Formations HSE</p>
-                            <p className="text-sm text-muted-foreground">Sécurité et prévention</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-green-600">+65%</p>
-                            <p className="text-sm text-muted-foreground">Amortissement: 6 mois</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">Formations Métiers</p>
-                            <p className="text-sm text-muted-foreground">Compétences techniques</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-green-600">+45%</p>
-                            <p className="text-sm text-muted-foreground">Amortissement: 10 mois</p>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center justify-between">
-                          <div>
-                            <p className="font-medium">Formations Urgentes</p>
-                            <p className="text-sm text-muted-foreground">Réponse aux urgences</p>
-                          </div>
-                          <div className="text-right">
-                            <p className="font-medium text-green-600">+35%</p>
-                            <p className="text-sm text-muted-foreground">Amortissement: 12 mois</p>
-                          </div>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Évolution du ROI</CardTitle>
-                      <CardDescription>
-                        Tendance du retour sur investissement
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="h-64 flex items-center justify-center">
-                        <div className="text-center">
-                          <TrendingUp className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-30" />
-                          <p className="text-muted-foreground">Graphique d'évolution du ROI</p>
-                        </div>
-                      </div>
-                    </CardContent>
-                  </Card>
-                </div>
-                
-                <Card className="mt-6">
-                  <CardHeader>
-                    <CardTitle>Facteurs d'impact sur le ROI</CardTitle>
-                    <CardDescription>
-                      Éléments contribuant au retour sur investissement
-                    </CardDescription>
-                  </CardHeader>
-                  <CardContent>
+                  <div className="space-y-2">
+                    <h3 className="text-base font-medium">ROI par Département</h3>
                     <div className="space-y-4">
-                      <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-md">
-                        <div className="bg-green-100 p-2 rounded-full">
-                          <TrendingUp className="h-6 w-6 text-green-700" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium">Réduction des accidents de travail</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Les formations HSE ont permis de réduire le nombre d'accidents de travail de 30%,
-                            générant une économie estimée à 950,000 FCFA en frais médicaux et arrêts de travail.
-                          </p>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-md">
-                        <div className="bg-blue-100 p-2 rounded-full">
-                          <TrendingUp className="h-6 w-6 text-blue-700" />
-                        </div>
-                        <div>
-                          <h3 className="font-medium">Amélioration de la productivité</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            Les formations techniques ont augmenté la productivité des équipes de 15%,
-                            représentant un gain estimé à 1,200,000 FCFA sur la période.
-                          </p>
+                      <div className="flex items-center">
+                        <div className="w-1/4 font-medium">Production</div>
+                        <div className="w-3/4">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div className="bg-green-600 h-2.5 rounded-full" style={{ width: '85%' }}></div>
+                          </div>
+                          <div className="flex justify-between text-xs mt-1">
+                            <span>ROI: 185%</span>
+                            <span>Coût: 28.500.000 FCFA</span>
+                          </div>
                         </div>
                       </div>
-                      
-                      <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-md">
-                        <div className="bg-amber-100 p-2 rounded-full">
-                          <TrendingUp className="h-6 w-6 text-amber-700" />
+                      <div className="flex items-center">
+                        <div className="w-1/4 font-medium">Maintenance</div>
+                        <div className="w-3/4">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div className="bg-blue-600 h-2.5 rounded-full" style={{ width: '65%' }}></div>
+                          </div>
+                          <div className="flex justify-between text-xs mt-1">
+                            <span>ROI: 145%</span>
+                            <span>Coût: 15.800.000 FCFA</span>
+                          </div>
                         </div>
-                        <div>
-                          <h3 className="font-medium">Réduction des défauts de qualité</h3>
-                          <p className="text-sm text-muted-foreground mt-1">
-                            La formation en contrôle qualité a permis de réduire les défauts de production de 25%,
-                            générant une économie de 640,000 FCFA en matériaux et reprises.
-                          </p>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-1/4 font-medium">HSE</div>
+                        <div className="w-3/4">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: '95%' }}></div>
+                          </div>
+                          <div className="flex justify-between text-xs mt-1">
+                            <span>ROI: 210%</span>
+                            <span>Coût: 12.400.000 FCFA</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="w-1/4 font-medium">RH</div>
+                        <div className="w-3/4">
+                          <div className="w-full bg-gray-200 rounded-full h-2.5">
+                            <div className="bg-purple-600 h-2.5 rounded-full" style={{ width: '40%' }}></div>
+                          </div>
+                          <div className="flex justify-between text-xs mt-1">
+                            <span>ROI: 108%</span>
+                            <span>Coût: 4.500.000 FCFA</span>
+                          </div>
                         </div>
                       </div>
                     </div>
-                  </CardContent>
-                </Card>
+                  </div>
+                </div>
               </CardContent>
             </Card>
           </TabsContent>
           
-          <TabsContent value="prevision">
+          <TabsContent value="forecast">
             <Card>
               <CardHeader>
                 <CardTitle>Prévisions Budgétaires</CardTitle>
-                <CardDescription>
-                  Planification et prévisions pour les périodes futures
-                </CardDescription>
+                <CardDescription>Estimations et projections pour les prochains mois</CardDescription>
               </CardHeader>
               <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Budget Prévisionnel</CardTitle>
-                      <CardDescription>Année 2025</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold">4,750,000 FCFA</div>
-                      <div className="flex items-center gap-1 text-sm text-green-600">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>+12% vs 2024</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">Formations Planifiées</CardTitle>
-                      <CardDescription>Année 2025</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold">24</div>
-                      <div className="flex items-center gap-1 text-sm text-green-600">
-                        <TrendingUp className="h-4 w-4" />
-                        <span>+6 vs 2024</span>
-                      </div>
-                    </CardContent>
-                  </Card>
-                  
-                  <Card>
-                    <CardHeader className="pb-2">
-                      <CardTitle className="text-lg">ROI Prévisionnel</CardTitle>
-                      <CardDescription>Année 2025</CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="text-3xl font-bold text-green-600">+55%</div>
-                      <p className="text-sm text-muted-foreground">
-                        Basé sur les tendances actuelles
-                      </p>
-                    </CardContent>
-                  </Card>
-                </div>
-                
                 <div className="space-y-6">
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Répartition prévisionnelle par trimestre</CardTitle>
-                      <CardDescription>
-                        Planification budgétaire 2025
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="border rounded-md overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Trimestre</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formations HSE</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formations Métiers</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">% du total</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            <tr>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium">T1 2025</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">3</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">2</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">1,200,000 FCFA</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">25%</div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium">T2 2025</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">4</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">1</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">950,000 FCFA</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">20%</div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium">T3 2025</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">2</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">3</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">1,300,000 FCFA</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">27%</div>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium">T4 2025</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">5</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">4</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">1,300,000 FCFA</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm">28%</div>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="rounded-lg border p-4">
+                      <h3 className="text-sm font-medium mb-2">Budget Restant</h3>
+                      <p className="text-2xl font-bold">40.800.000 FCFA</p>
+                      <p className="text-xs text-muted-foreground">40% du budget total</p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <h3 className="text-sm font-medium mb-2">Dépenses Prévues</h3>
+                      <p className="text-2xl font-bold">35.500.000 FCFA</p>
+                      <p className="text-xs text-muted-foreground">Pour les 6 prochains mois</p>
+                    </div>
+                    <div className="rounded-lg border p-4">
+                      <h3 className="text-sm font-medium mb-2">Solde Prévisionnel</h3>
+                      <p className="text-2xl font-bold text-green-600">5.300.000 FCFA</p>
+                      <p className="text-xs text-muted-foreground">Excédent prévu</p>
+                    </div>
+                  </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Ajustement budgétaire</CardTitle>
-                        <CardDescription>
-                          Outil de simulation et planification
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div>
-                            <Label htmlFor="budget">Budget total (FCFA)</Label>
-                            <Input id="budget" type="number" defaultValue="4750000" />
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="formationsHSE">Formations HSE</Label>
-                              <Input id="formationsHSE" type="number" defaultValue="14" />
-                            </div>
-                            <div>
-                              <Label htmlFor="formationsMetier">Formations Métier</Label>
-                              <Input id="formationsMetier" type="number" defaultValue="10" />
-                            </div>
-                          </div>
-                          
-                          <div className="grid grid-cols-2 gap-4">
-                            <div>
-                              <Label htmlFor="coutFormateur">Coût formateurs (%)</Label>
-                              <Input id="coutFormateur" type="number" defaultValue="50" />
-                            </div>
-                            <div>
-                              <Label htmlFor="coutMateriel">Coût matériel (%)</Label>
-                              <Input id="coutMateriel" type="number" defaultValue="15" />
-                            </div>
-                          </div>
-                          
-                          <Button className="w-full">
-                            Simuler
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                    
-                    <Card>
-                      <CardHeader>
-                        <CardTitle>Optimisation du budget</CardTitle>
-                        <CardDescription>
-                          Recommandations basées sur l'historique
-                        </CardDescription>
-                      </CardHeader>
-                      <CardContent>
-                        <div className="space-y-4">
-                          <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-md">
-                            <div className="bg-blue-100 p-2 rounded-full">
-                              <BarChart3 className="h-6 w-6 text-blue-700" />
-                            </div>
-                            <div>
-                              <h3 className="font-medium">Optimisation des groupes</h3>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Augmenter la taille moyenne des groupes de 8 à 10 participants générerait
-                                une économie estimée à 450,000 FCFA sans impact sur la qualité.
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-md">
-                            <div className="bg-green-100 p-2 rounded-full">
-                              <BarChart3 className="h-6 w-6 text-green-700" />
-                            </div>
-                            <div>
-                              <h3 className="font-medium">Mutualisation des formations</h3>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Combiner certaines formations HSE similaires permettrait
-                                d'économiser environ 320,000 FCFA en frais de formateurs et logistique.
-                              </p>
-                            </div>
-                          </div>
-                          
-                          <div className="flex items-start gap-4 p-4 bg-gray-50 rounded-md">
-                            <div className="bg-amber-100 p-2 rounded-full">
-                              <BarChart3 className="h-6 w-6 text-amber-700" />
-                            </div>
-                            <div>
-                              <h3 className="font-medium">Investissement formateurs internes</h3>
-                              <p className="text-sm text-muted-foreground mt-1">
-                                Former 2 formateurs internes supplémentaires générerait un coût initial
-                                de 750,000 FCFA mais un ROI de 35% dès la première année.
-                              </p>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
+                  <div>
+                    <h3 className="text-base font-medium mb-4">Planning Prévisionnel des Dépenses</h3>
+                    <div className="rounded-md border">
+                      <table className="min-w-full divide-y divide-gray-200">
+                        <thead className="bg-gray-50">
+                          <tr>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Mois</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Budget Alloué</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Dépenses Prévues</th>
+                            <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Formations Planifiées</th>
+                          </tr>
+                        </thead>
+                        <tbody className="bg-white divide-y divide-gray-200">
+                          <tr>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">Avril 2025</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">8.500.000 FCFA</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">7.800.000 FCFA</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">3</div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">Mai 2025</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">9.200.000 FCFA</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">9.500.000 FCFA</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">4</div>
+                            </td>
+                          </tr>
+                          <tr>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">Juin 2025</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">7.800.000 FCFA</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">6.200.000 FCFA</div>
+                            </td>
+                            <td className="px-6 py-4 whitespace-nowrap">
+                              <div className="text-sm text-gray-900">2</div>
+                            </td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <Button>
+                      <Download className="h-4 w-4 mr-2" />
+                      Exporter Prévisions
+                    </Button>
                   </div>
                 </div>
               </CardContent>
