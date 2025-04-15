@@ -8,6 +8,15 @@ export type Document = {
   url?: string;
 };
 
+// Define the types for field arrays to ensure compatibility with react-hook-form
+export type QualificationItem = string;
+export type AutreItem = string;
+export type DocumentItem = {
+  nom: string;
+  obligatoire: boolean;
+  url?: string;
+};
+
 // Schema for appel d'offre form
 export const appelOffreSchema = z.object({
   reference: z.string().nonempty("La référence est requise"),
@@ -36,12 +45,3 @@ export const appelOffreSchema = z.object({
 });
 
 export type AppelOffreFormData = z.infer<typeof appelOffreSchema>;
-
-// Define explicit types for each field array to avoid type errors
-export type QualificationItem = string;
-export type AutreItem = string;
-export type DocumentItem = {
-  nom: string;
-  obligatoire: boolean;
-  url?: string;
-};

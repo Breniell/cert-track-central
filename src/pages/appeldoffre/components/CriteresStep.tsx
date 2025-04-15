@@ -14,18 +14,18 @@ interface CriteresStepProps {
 }
 
 export function CriteresStep({ control }: CriteresStepProps) {
-  // Use useFieldArray with explicit typing for qualification
+  // Use useFieldArray to manage dynamic arrays of qualification criteria
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
-      name: `criteres.qualification` as const,
+      name: "criteres.qualification",
     });
 
-  // Use useFieldArray with explicit typing for autres
+  // Use useFieldArray to manage dynamic arrays of other criteria
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
     useFieldArray({
       control,
-      name: `criteres.autres` as const,
+      name: "criteres.autres",
     });
 
   return (
@@ -84,7 +84,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendQualification("" as any)}
+            onClick={() => appendQualification("")}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -136,7 +136,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendAutre("" as any)}
+            onClick={() => appendAutre("")}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
