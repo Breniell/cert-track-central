@@ -72,6 +72,18 @@ let budgetsData: BudgetFormation[] = [
   }
 ];
 
+// Define a new interface for the budget overview data
+interface BudgetOverviewItem {
+  id: number;
+  titre: string;
+  type: string;
+  date: string;
+  montant: number;
+  departement: string;
+  participants: number;
+  status: string;
+}
+
 export const budgetService = {
   // Récupérer le budget d'une formation
   getFormationBudget: async (formationId: number): Promise<BudgetFormation | undefined> => {
@@ -81,6 +93,52 @@ export const budgetService = {
         resolve(budget);
       }, 300);
     });
+  },
+  
+  // Add the missing getBudgetOverview method
+  getBudgetOverview: (): BudgetOverviewItem[] => {
+    return [
+      {
+        id: 1,
+        titre: "Sécurité en hauteur",
+        type: "HSE",
+        date: "2024-03-15",
+        montant: 475000,
+        departement: "Production",
+        participants: 12,
+        status: "Terminée"
+      },
+      {
+        id: 2,
+        titre: "Manipulation des produits chimiques",
+        type: "HSE",
+        date: "2024-03-18",
+        montant: 435000,
+        departement: "HSE",
+        participants: 15,
+        status: "En cours"
+      },
+      {
+        id: 3,
+        titre: "Maintenance préventive",
+        type: "Métier",
+        date: "2024-03-20",
+        montant: 950000,
+        departement: "Maintenance",
+        participants: 8,
+        status: "À venir"
+      },
+      {
+        id: 4,
+        titre: "Leadership et Management",
+        type: "Métier",
+        date: "2024-03-22",
+        montant: 850000,
+        departement: "RH",
+        participants: 10,
+        status: "À venir"
+      }
+    ];
   },
   
   // Créer ou mettre à jour le budget d'une formation

@@ -61,6 +61,7 @@ export default function FormateurProfile() {
     
     try {
       if (formateur) {
+        // Instead of using eval, directly update the formateur with editedData
         await formateurService.updateFormateur(formateur.id, editedData);
         toast({
           title: "Profil mis à jour",

@@ -84,7 +84,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendQualification("")}
+            onClick={() => appendQualification("" as any)}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -136,7 +136,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendAutre("")}
+            onClick={() => appendAutre("" as any)}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
