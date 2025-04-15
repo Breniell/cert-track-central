@@ -5,6 +5,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { ArrowRightIcon, BookOpenIcon, CalendarIcon, UsersIcon, ClipboardListIcon, BarChart3Icon, ShieldIcon } from "lucide-react";
 import { Link } from "react-router-dom";
+import { AdminDashboard } from "@/components/dashboard/AdminDashboard";
 
 const welcomeMessages = {
   administrateur: "Bienvenue sur le tableau de bord administrateur de CertTrackCentral.",
@@ -34,6 +35,15 @@ export default function Index() {
   const welcomeMessage = welcomeMessages[user.role] || "Bienvenue sur CertTrackCentral";
   const description = descriptions[user.role] || "Plateforme centralisée de gestion des formations.";
 
+  // Si l'utilisateur est un administrateur, afficher le tableau de bord admin
+  if (user.role === "administrateur") {
+    return (
+      <Layout>
+        <AdminDashboard />
+      </Layout>
+    );
+  }
+
   const getFeatureCards = () => {
     const commonFeatures = [
       {
@@ -54,49 +64,6 @@ export default function Index() {
 
     // Fonctionnalités spécifiques selon le rôle
     switch (user.role) {
-      case "administrateur":
-        return [
-          ...commonFeatures,
-          {
-            title: "Formateurs",
-            description: "Gérez les profils et les disponibilités des formateurs.",
-            icon: UsersIcon,
-            href: "/formateurs",
-            color: "bg-purple-50 text-purple-600"
-          },
-          {
-            title: "Participants",
-            description: "Consultez et gérez les inscrits aux formations.",
-            icon: ClipboardListIcon,
-            href: "/participants",
-            color: "bg-green-50 text-green-600"
-          },
-          {
-            title: "Budget",
-            description: "Suivez les coûts et le ROI de vos formations.",
-            icon: BarChart3Icon,
-            href: "/budget",
-            color: "bg-amber-50 text-amber-600"
-          },
-          {
-            title: "HSE",
-            description: "Vérifiez les documents et gérez les urgences HSE.",
-            icon: ShieldIcon,
-            href: "/hse/verification-documents",
-            color: "bg-red-50 text-red-600"
-          },
-        ];
-      case "formateur":
-        return [
-          ...commonFeatures,
-          {
-            title: "Évaluations",
-            description: "Gérez les évaluations de vos participants.",
-            icon: ClipboardListIcon,
-            href: "/formateur/evaluations",
-            color: "bg-green-50 text-green-600"
-          }
-        ];
       case "hse":
         return [
           ...commonFeatures,
@@ -130,6 +97,31 @@ export default function Index() {
             description: "Suivez les coûts et le ROI de vos formations.",
             icon: BarChart3Icon,
             href: "/budget",
+            color: "bg-amber-50 text-amber-600"
+          },
+          {
+            title: "Appels d'offres",
+            description: "Gérez les appels d'offres pour les formations.",
+            icon: ClipboardListIcon,
+            href: "/appels-offre",
+            color: "bg-green-50 text-green-600"
+          }
+        ];
+      case "formateur":
+        return [
+          ...commonFeatures,
+          {
+            title: "Évaluations",
+            description: "Gérez les évaluations de vos participants.",
+            icon: ClipboardListIcon,
+            href: "/formateur/evaluations",
+            color: "bg-green-50 text-green-600"
+          },
+          {
+            title: "Pointage",
+            description: "Gérez votre pointage et vos heures.",
+            icon: ClipboardListIcon,
+            href: "/formateur/pointage",
             color: "bg-amber-50 text-amber-600"
           }
         ];

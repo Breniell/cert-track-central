@@ -29,7 +29,7 @@ const appelOffreSchema = z.object({
   datePublication: z.date(),
   dateCloture: z.date(),
   budgetMaximum: z.number().positive().optional(),
-  statut: z.literal("En préparation"),
+  statut: z.string().default("En préparation"),
   criteres: z.object({
     experience: z.number().min(0, "L'expérience minimale doit être un nombre positif"),
     qualification: z.array(z.string()).nonempty("Au moins une qualification est requise"),
@@ -112,11 +112,20 @@ export default function NouvelAppelOffre() {
 
   const onSubmit = async (data: AppelOffreFormData) => {
     try {
-      // Formatter les dates au format 'YYYY-MM-DD'
+      // Ensure required fields are defined
       const formattedData = {
-        ...data,
+        reference: data.reference,
+        titre: data.titre,
+        description: data.description,
+        typeFormation: data.typeFormation,
         datePublication: format(data.datePublication, 'yyyy-MM-dd'),
         dateCloture: format(data.dateCloture, 'yyyy-MM-dd'),
+        budgetMaximum: data.budgetMaximum,
+        statut: "En préparation" as const,
+        criteres: data.criteres,
+        documents: data.documents,
+        departementDemandeur: data.departementDemandeur,
+        responsableDemande: data.responsableDemande,
       };
       
       await appelOffreService.createAppelOffre(formattedData);
@@ -381,7 +390,7 @@ export default function NouvelAppelOffre() {
                       <Input
                         id="experience"
                         type="number"
-                        onChange={(e) => field.onChange(parseInt(e.target.value))}
+                        onChange={(e) => field.onChange(parseInt(e.target.value) || 0)}
                         value={field.value}
                       />
                     )}

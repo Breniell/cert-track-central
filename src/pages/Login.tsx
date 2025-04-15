@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Label } from "@/components/ui/label";
 import { Shield, Users, Settings, Book, User, FileCheck } from "lucide-react";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -32,20 +33,24 @@ export default function Login() {
   };
 
   const demoAccounts = [
-    { role: "Admin", icon: Shield, email: "jean.dupont@example.com", password: "password" },
-    { role: "Formateur", icon: Users, email: "pierre.dubois@example.com", password: "password" },
-    { role: "RH", icon: Settings, email: "sophie.martin@example.com", password: "password" },
-    { role: "Personnel", icon: User, email: "marie.petit@example.com", password: "password" },
-    { role: "Sous-traitant", icon: Book, email: "thomas.leroy@external.com", password: "password" },
-    { role: "HSE", icon: FileCheck, email: "hse@example.com", password: "password" }
+    { role: "Admin", icon: Shield, email: "jean.dupont@example.com", password: "password", color: "bg-indigo-100" },
+    { role: "Formateur", icon: Users, email: "pierre.dubois@example.com", password: "password", color: "bg-blue-100" },
+    { role: "RH", icon: Settings, email: "sophie.martin@example.com", password: "password", color: "bg-purple-100" },
+    { role: "Personnel", icon: User, email: "marie.petit@example.com", password: "password", color: "bg-green-100" },
+    { role: "Sous-traitant", icon: Book, email: "thomas.leroy@external.com", password: "password", color: "bg-amber-100" },
+    { role: "HSE", icon: FileCheck, email: "hse@example.com", password: "password", color: "bg-red-100" }
   ];
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 p-4">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-indigo-100 p-4">
+      <div className="w-full max-w-md relative">
+        <div className="absolute -right-4 -top-4">
+          <Badge variant="success" className="px-3 py-1">Version 2.5</Badge>
+        </div>
+        
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-md bg-primary flex items-center justify-center text-white text-2xl font-bold">
+            <div className="h-16 w-16 rounded-md bg-primary flex items-center justify-center text-white text-2xl font-bold shadow-lg">
               CTC
             </div>
           </div>
@@ -53,7 +58,7 @@ export default function Login() {
           <p className="text-gray-600 mt-2">Plateforme de gestion des formations HSE et métiers</p>
         </div>
         
-        <Card className="shadow-lg">
+        <Card className="shadow-xl backdrop-blur-sm bg-white/90 border-0">
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl text-center">Connexion</CardTitle>
             <CardDescription className="text-center">
@@ -97,14 +102,14 @@ export default function Login() {
               </div>
             </CardContent>
             <CardFooter>
-              <Button className="w-full h-11 text-base" type="submit" disabled={isSubmitting}>
+              <Button className="w-full h-11 text-base shadow-md" type="submit" disabled={isSubmitting}>
                 {isSubmitting ? "Connexion en cours..." : "Se connecter"}
               </Button>
             </CardFooter>
           </form>
         </Card>
         
-        <div className="mt-8 text-center text-sm text-gray-500">
+        <div className="mt-8 text-center text-sm text-gray-600">
           <p className="mb-3 font-medium">Comptes de démonstration:</p>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
             {demoAccounts.map((account, index) => (
@@ -112,7 +117,7 @@ export default function Login() {
                 key={index} 
                 variant="outline" 
                 size="sm"
-                className="flex items-center justify-center gap-1.5 py-3 h-auto" 
+                className={`flex items-center justify-center gap-1.5 py-3 h-auto hover:shadow-md transition-all ${account.color}`}
                 onClick={() => {
                   setEmail(account.email);
                   setPassword(account.password);
@@ -123,6 +128,11 @@ export default function Login() {
               </Button>
             ))}
           </div>
+        </div>
+
+        <div className="mt-8 text-center text-xs text-gray-500">
+          <p>© 2025 CertTrackCentral. Tous droits réservés.</p>
+          <p className="mt-1">Version 2.5.0 - Mis à jour le 15/04/2025</p>
         </div>
       </div>
     </div>
