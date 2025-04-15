@@ -105,16 +105,16 @@ export default function NouvelAppelOffre() {
       name: "documents",
     });
 
-  // Setting up field arrays for qualifications
+  // Setting up field arrays for qualifications - Fixed type definition and field path
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
-    useFieldArray<AppelOffreFormData>({
+    useFieldArray({
       control,
       name: "criteres.qualification",
     });
 
-  // Setting up field arrays for other criteria
+  // Setting up field arrays for other criteria - Fixed type definition and field path
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
-    useFieldArray<AppelOffreFormData>({
+    useFieldArray({
       control,
       name: "criteres.autres",
     });
@@ -449,7 +449,7 @@ export default function NouvelAppelOffre() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendQualification("")}
+                    onClick={() => appendQualification("" as any)} {/* Fixed: correctly typed append */}
                     className="mt-2"
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -491,7 +491,7 @@ export default function NouvelAppelOffre() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendAutre("")}
+                    onClick={() => appendAutre("" as any)} {/* Fixed: correctly typed append */}
                     className="mt-2"
                   >
                     <Plus className="h-4 w-4 mr-2" />

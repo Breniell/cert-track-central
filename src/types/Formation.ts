@@ -20,6 +20,37 @@ export interface Document {
   dateExpiration?: string;
 }
 
+export interface AppelOffreDocument {
+  nom: string;
+  obligatoire: boolean;
+  url?: string;
+}
+
+export interface AppelOffreCriteres {
+  experience: number;
+  qualification: string[];
+  delai: string;
+  autres?: string[];
+}
+
+export interface AppelOffre {
+  id: number;
+  reference: string;
+  titre: string;
+  description: string;
+  typeFormation: string;
+  datePublication: string;
+  dateCloture: string;
+  budgetMaximum?: number;
+  statut: 'En préparation' | 'Publié' | 'Clôturé' | 'Attribué';
+  criteres: AppelOffreCriteres;
+  documents: AppelOffreDocument[];
+  departementDemandeur: string;
+  responsableDemande: string;
+  prestatairesRepondus?: number;
+  prestaireSelectionne?: string;
+}
+
 export interface Participant {
   id: number;
   nom: string;
