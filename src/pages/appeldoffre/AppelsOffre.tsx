@@ -59,7 +59,7 @@ export default function AppelsOffre() {
       case 'Clôturé':
         return 'default';
       case 'Attribué':
-        return 'success';
+        return 'secondary';
       case 'Annulé':
         return 'destructive';
       default:
@@ -388,7 +388,7 @@ export default function AppelsOffre() {
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <CardTitle className="text-lg">{ao.titre}</CardTitle>
-                        <Badge variant="success">{ao.statut}</Badge>
+                        <Badge variant="secondary">{ao.statut}</Badge>
                       </div>
                       <CardDescription>{ao.reference}</CardDescription>
                     </CardHeader>

@@ -73,6 +73,7 @@ export default function NouvelAppelOffre() {
       {
         nom: "Cahier des charges",
         obligatoire: true,
+        url: undefined
       }
     ],
     departementDemandeur: "",
@@ -90,6 +91,12 @@ export default function NouvelAppelOffre() {
     defaultValues,
   });
 
+  const { fields: documentFields, append: appendDocument, remove: removeDocument } = 
+    useFieldArray({
+      control,
+      name: "documents",
+    });
+
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
@@ -100,12 +107,6 @@ export default function NouvelAppelOffre() {
     useFieldArray({
       control,
       name: "criteres.autres",
-    });
-
-  const { fields: documentFields, append: appendDocument, remove: removeDocument } = 
-    useFieldArray({
-      control,
-      name: "documents",
     });
 
   const onSubmit = async (data: AppelOffreFormData) => {
@@ -543,7 +544,7 @@ export default function NouvelAppelOffre() {
                 <Button
                   type="button"
                   variant="outline"
-                  onClick={() => appendDocument({ nom: "", obligatoire: false })}
+                  onClick={() => appendDocument({ nom: "", obligatoire: false, url: "" })}
                 >
                   <Plus className="h-4 w-4 mr-2" />
                   Ajouter un document

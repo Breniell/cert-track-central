@@ -172,7 +172,7 @@ export default function PointageFormateur({ formateurId }: PointageFormateurProp
                     <Badge 
                       variant={
                         activeFormation.statut === "En cours" 
-                          ? "success" 
+                          ? "secondary" 
                           : activeFormation.statut === "À venir" 
                             ? "outline" 
                             : activeFormation.statut === "Terminée" 
@@ -289,7 +289,7 @@ export default function PointageFormateur({ formateurId }: PointageFormateurProp
                           <div>{participant.id}</div>
                           <div>{nom}</div>
                           <div>
-                            <Badge variant={participant.present ? "success" : "destructive"}>
+                            <Badge variant={participant.present ? "secondary" : "destructive"}>
                               {participant.present ? "Présent" : "Absent"}
                             </Badge>
                           </div>
