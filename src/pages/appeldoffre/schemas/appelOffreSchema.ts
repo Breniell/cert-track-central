@@ -37,5 +37,7 @@ export const appelOffreSchema = z.object({
 
 export type AppelOffreFormData = z.infer<typeof appelOffreSchema>;
 
-// Define helper type to extract path strings for nested field arrays
-export type NestedArrayPath = "criteres.qualification" | "criteres.autres" | "documents";
+// New type definitions for our field arrays
+export type QualificationFieldArray = AppelOffreFormData['criteres']['qualification'];
+export type AutresFieldArray = AppelOffreFormData['criteres']['autres'];
+export type DocumentsFieldArray = AppelOffreFormData['documents'];
