@@ -73,7 +73,7 @@ export default function NouvelAppelOffre() {
       {
         nom: "Cahier des charges",
         obligatoire: true,
-        url: undefined
+        url: "",
       }
     ],
     departementDemandeur: "",
@@ -91,6 +91,7 @@ export default function NouvelAppelOffre() {
     defaultValues,
   });
 
+  // Setting up field arrays for each section
   const { fields: documentFields, append: appendDocument, remove: removeDocument } = 
     useFieldArray({
       control,
