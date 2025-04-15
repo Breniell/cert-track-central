@@ -449,7 +449,7 @@ export default function NouvelAppelOffre() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendQualification("" as any)} {/* Fixed: correctly typed append */}
+                    onClick={() => appendQualification("" as any)}
                     className="mt-2"
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -491,7 +491,7 @@ export default function NouvelAppelOffre() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendAutre("" as any)} {/* Fixed: correctly typed append */}
+                    onClick={() => appendAutre("" as any)}
                     className="mt-2"
                   >
                     <Plus className="h-4 w-4 mr-2" />
