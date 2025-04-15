@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AppelOffreFormData, QualificationFieldArray, AutresFieldArray } from "../schemas/appelOffreSchema";
+import { AppelOffreFormData, QualificationItem, AutreItem } from "../schemas/appelOffreSchema";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { useFieldArray } from "react-hook-form";
 
@@ -14,16 +14,16 @@ interface CriteresStepProps {
 }
 
 export function CriteresStep({ control }: CriteresStepProps) {
-  // Use explicit field array typing for qualifications
+  // Use properly typed field arrays
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
-    useFieldArray<AppelOffreFormData>({
+    useFieldArray({
       control,
       name: "criteres.qualification",
     });
 
-  // Use explicit field array typing for autres
+  // Use properly typed field arrays
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
-    useFieldArray<AppelOffreFormData>({
+    useFieldArray({
       control,
       name: "criteres.autres",
     });

@@ -37,7 +37,11 @@ export const appelOffreSchema = z.object({
 
 export type AppelOffreFormData = z.infer<typeof appelOffreSchema>;
 
-// New type definitions for our field arrays
-export type QualificationFieldArray = AppelOffreFormData['criteres']['qualification'];
-export type AutresFieldArray = AppelOffreFormData['criteres']['autres'];
-export type DocumentsFieldArray = AppelOffreFormData['documents'];
+// Define explicit types for each field array to avoid type errors
+export type QualificationItem = string;
+export type AutreItem = string;
+export type DocumentItem = {
+  nom: string;
+  obligatoire: boolean;
+  url?: string;
+};
