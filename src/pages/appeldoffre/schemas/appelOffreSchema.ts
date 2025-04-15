@@ -37,3 +37,10 @@ export const appelOffreSchema = z.object({
 
 export type AppelOffreFormData = z.infer<typeof appelOffreSchema>;
 
+// Add a type definition to make useFieldArray work correctly with nested fields
+// This helps TypeScript understand the structure of our form
+export type NestedKeyOf<ObjectType extends object> = 
+  {[Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends object 
+    ? `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`
+    : `${Key}`
+  }[keyof ObjectType & (string | number)];

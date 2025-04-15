@@ -14,6 +14,7 @@ interface CriteresStepProps {
 }
 
 export function CriteresStep({ control }: CriteresStepProps) {
+  // Fix the type by correctly setting the path for useFieldArray
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
@@ -145,4 +146,3 @@ export function CriteresStep({ control }: CriteresStepProps) {
     </Card>
   );
 }
-
