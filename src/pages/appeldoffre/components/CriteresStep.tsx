@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AppelOffreFormData, QualificationItem, AutreItem } from "../schemas/appelOffreSchema";
+import { AppelOffreFormData } from "../schemas/appelOffreSchema";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { useFieldArray } from "react-hook-form";
 
@@ -14,18 +14,18 @@ interface CriteresStepProps {
 }
 
 export function CriteresStep({ control }: CriteresStepProps) {
-  // Use properly typed field arrays
+  // Use useFieldArray with explicit typing for qualification
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
-      name: "criteres.qualification",
+      name: `criteres.qualification` as const,
     });
 
-  // Use properly typed field arrays
+  // Use useFieldArray with explicit typing for autres
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
     useFieldArray({
       control,
-      name: "criteres.autres",
+      name: `criteres.autres` as const,
     });
 
   return (
@@ -84,7 +84,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendQualification("")}
+            onClick={() => appendQualification("" as any)}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -136,7 +136,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendAutre("")}
+            onClick={() => appendAutre("" as any)}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
