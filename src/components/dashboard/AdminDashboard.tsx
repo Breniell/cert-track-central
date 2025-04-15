@@ -23,7 +23,11 @@ interface DashboardCardProps {
   description: string;
   icon: React.ElementType;
   stats: number;
-  secondaryStat?: { count: number; label: string; variant?: "default" | "secondary" | "destructive" | "outline" | "success" };
+  secondaryStat?: { 
+    count: number; 
+    label: string; 
+    variant?: "default" | "secondary" | "destructive" | "outline" | "success" 
+  };
   href: string;
   actionLabel: string;
   color: string;
@@ -84,7 +88,7 @@ export const AdminDashboard = () => {
       description: "Gestion des formations sécurité et santé",
       icon: ShieldIcon,
       stats: 24,
-      secondaryStat: { count: 5, label: "Nouvelles", variant: "success" },
+      secondaryStat: { count: 5, label: "Nouvelles", variant: "success" as const },
       href: "/formations/hse",
       actionLabel: "Voir les formations HSE",
       color: "bg-red-600"
@@ -94,7 +98,7 @@ export const AdminDashboard = () => {
       description: "Compétences techniques et métiers",
       icon: BookOpen,
       stats: 36,
-      secondaryStat: { count: 8, label: "Récentes", variant: "secondary" },
+      secondaryStat: { count: 8, label: "Récentes", variant: "secondary" as const },
       href: "/formations/metiers",
       actionLabel: "Voir les formations Métiers",
       color: "bg-blue-600"
@@ -104,7 +108,7 @@ export const AdminDashboard = () => {
       description: "Calendrier des sessions",
       icon: Calendar,
       stats: 42,
-      secondaryStat: { count: 3, label: "Aujourd'hui", variant: "default" },
+      secondaryStat: { count: 3, label: "Aujourd'hui", variant: "default" as const },
       href: "/planning",
       actionLabel: "Voir le planning",
       color: "bg-indigo-600"
@@ -114,7 +118,7 @@ export const AdminDashboard = () => {
       description: "Gestion des intervenants",
       icon: Users,
       stats: 18,
-      secondaryStat: { count: 2, label: "Indisponibles", variant: "destructive" },
+      secondaryStat: { count: 2, label: "Indisponibles", variant: "destructive" as const },
       href: "/formateurs",
       actionLabel: "Gérer les formateurs",
       color: "bg-purple-600"
@@ -124,7 +128,7 @@ export const AdminDashboard = () => {
       description: "Gestion des prestataires",
       icon: Building,
       stats: 12,
-      secondaryStat: { count: 4, label: "En attente", variant: "secondary" },
+      secondaryStat: { count: 4, label: "En attente", variant: "secondary" as const },
       href: "/appels-offre",
       actionLabel: "Voir les appels d'offres",
       color: "bg-amber-600"
@@ -134,7 +138,7 @@ export const AdminDashboard = () => {
       description: "Suivi financier des formations",
       icon: BarChart3,
       stats: 3250000,
-      secondaryStat: { count: 15, label: "% du budget", variant: "success" },
+      secondaryStat: { count: 15, label: "% du budget", variant: "success" as const },
       href: "/budget",
       actionLabel: "Consulter le budget",
       color: "bg-green-600"

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Layout from "@/components/layout/Layout";
@@ -19,6 +18,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { format } from "date-fns";
 import { fr } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+
+// Type for document
+type Document = {
+  nom: string;
+  obligatoire: boolean;
+  url?: string;
+};
 
 // Schéma de validation pour l'appel d'offre
 const appelOffreSchema = z.object({
@@ -101,18 +107,18 @@ export default function NouvelAppelOffre() {
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
-      name: "criteres.qualification",
+      name: "criteres.qualification" as any,
     });
 
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
     useFieldArray({
       control,
-      name: "criteres.autres",
+      name: "criteres.autres" as any,
     });
 
   const onSubmit = async (data: AppelOffreFormData) => {
     try {
-      // Ensure required fields are defined
+      // Ensure all required fields are defined
       const formattedData = {
         reference: data.reference,
         titre: data.titre,
@@ -120,9 +126,14 @@ export default function NouvelAppelOffre() {
         typeFormation: data.typeFormation,
         datePublication: format(data.datePublication, 'yyyy-MM-dd'),
         dateCloture: format(data.dateCloture, 'yyyy-MM-dd'),
-        budgetMaximum: data.budgetMaximum,
+        budgetMaximum: data.budgetMaximum || 0,
         statut: "En préparation" as const,
-        criteres: data.criteres,
+        criteres: {
+          experience: data.criteres.experience,
+          qualification: data.criteres.qualification,
+          delai: data.criteres.delai,
+          autres: data.criteres.autres || [],
+        },
         documents: data.documents,
         departementDemandeur: data.departementDemandeur,
         responsableDemande: data.responsableDemande,
@@ -514,7 +525,7 @@ export default function NouvelAppelOffre() {
                         <Label htmlFor={`documents.${index}.nom`}>Nom du document</Label>
                         <Input
                           id={`documents.${index}.nom`}
-                          {...register(`documents.${index}.nom`)}
+                          {...register(`documents.${index}.nom` as const)}
                           placeholder="Nom du document"
                         />
                         {errors.documents?.[index]?.nom && (
@@ -525,7 +536,7 @@ export default function NouvelAppelOffre() {
                       <div className="flex items-center gap-2">
                         <Controller
                           control={control}
-                          name={`documents.${index}.obligatoire`}
+                          name={`documents.${index}.obligatoire` as const}
                           render={({ field }) => (
                             <input
                               type="checkbox"
@@ -543,7 +554,7 @@ export default function NouvelAppelOffre() {
                         <Label htmlFor={`documents.${index}.url`}>URL (facultatif)</Label>
                         <Input
                           id={`documents.${index}.url`}
-                          {...register(`documents.${index}.url`)}
+                          {...register(`documents.${index}.url` as const)}
                           placeholder="URL du document"
                         />
                       </div>
