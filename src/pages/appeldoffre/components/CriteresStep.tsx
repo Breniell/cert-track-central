@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { AppelOffreFormData, NestedKeyOf } from "../schemas/appelOffreSchema";
+import { AppelOffreFormData, FieldArrayPath } from "../schemas/appelOffreSchema";
 import { FormField, FormItem, FormControl, FormMessage } from "@/components/ui/form";
 import { useFieldArray } from "react-hook-form";
 
@@ -18,13 +18,13 @@ export function CriteresStep({ control }: CriteresStepProps) {
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
-      name: `criteres.qualification` as NestedKeyOf<AppelOffreFormData>,
+      name: "criteres.qualification" as FieldArrayPath,
     });
 
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
     useFieldArray({
       control,
-      name: `criteres.autres` as NestedKeyOf<AppelOffreFormData>,
+      name: "criteres.autres" as FieldArrayPath,
     });
 
   return (

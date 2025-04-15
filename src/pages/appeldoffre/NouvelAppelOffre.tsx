@@ -70,7 +70,11 @@ export default function NouvelAppelOffre() {
           delai: data.criteres.delai,
           autres: data.criteres.autres || [],
         },
-        documents: data.documents,
+        documents: data.documents.map(doc => ({
+          nom: doc.nom,
+          obligatoire: doc.obligatoire,
+          url: doc.url || undefined
+        })),
         departementDemandeur: data.departementDemandeur,
         responsableDemande: data.responsableDemande,
       };

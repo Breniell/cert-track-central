@@ -37,9 +37,5 @@ export const appelOffreSchema = z.object({
 
 export type AppelOffreFormData = z.infer<typeof appelOffreSchema>;
 
-// Type definition to make useFieldArray work correctly with nested fields
-export type NestedKeyOf<ObjectType extends object> = 
-  {[Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends object 
-    ? `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`
-    : `${Key}`
-  }[keyof ObjectType & (string | number)];
+// Type for field arrays specifically for react-hook-form typing
+export type FieldArrayPath = "documents" | "criteres.qualification" | "criteres.autres";
