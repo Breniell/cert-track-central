@@ -22,7 +22,7 @@ export const appelOffreSchema = z.object({
     experience: z.number().min(0, "L'expérience minimale doit être un nombre positif"),
     qualification: z.array(z.string()).nonempty("Au moins une qualification est requise"),
     delai: z.string().nonempty("Le délai est requis"),
-    autres: z.array(z.string()).optional(),
+    autres: z.array(z.string()).optional().default([]),
   }),
   documents: z.array(
     z.object({
@@ -37,8 +37,7 @@ export const appelOffreSchema = z.object({
 
 export type AppelOffreFormData = z.infer<typeof appelOffreSchema>;
 
-// Add a type definition to make useFieldArray work correctly with nested fields
-// This helps TypeScript understand the structure of our form
+// Type definition to make useFieldArray work correctly with nested fields
 export type NestedKeyOf<ObjectType extends object> = 
   {[Key in keyof ObjectType & (string | number)]: ObjectType[Key] extends object 
     ? `${Key}` | `${Key}.${NestedKeyOf<ObjectType[Key]>}`

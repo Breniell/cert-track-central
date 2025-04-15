@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format } from "date-fns"; // Add this import for the format function
+import { format } from "date-fns";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/use-toast";
@@ -14,7 +14,7 @@ import { InformationsGeneralesStep } from "./components/InformationsGeneralesSte
 import { CriteresStep } from "./components/CriteresStep";
 import { DocumentsStep } from "./components/DocumentsStep";
 import { appelOffreSchema, type AppelOffreFormData } from "./schemas/appelOffreSchema";
-import { cn } from "@/lib/utils"; // Add this import for the cn function
+import { cn } from "@/lib/utils";
 
 export default function NouvelAppelOffre() {
   const navigate = useNavigate();
@@ -54,7 +54,7 @@ export default function NouvelAppelOffre() {
 
   const onSubmit = async (data: AppelOffreFormData) => {
     try {
-      // Ensure all required fields are present to satisfy the AppelOffre type
+      // Ensure all required fields are present and properly formatted to satisfy the AppelOffre type
       const formattedData = {
         reference: data.reference,
         titre: data.titre,
@@ -64,7 +64,12 @@ export default function NouvelAppelOffre() {
         dateCloture: format(data.dateCloture, 'yyyy-MM-dd'),
         budgetMaximum: data.budgetMaximum || 0,
         statut: "En préparation" as const,
-        criteres: data.criteres,
+        criteres: {
+          experience: data.criteres.experience,
+          qualification: data.criteres.qualification,
+          delai: data.criteres.delai,
+          autres: data.criteres.autres || [],
+        },
         documents: data.documents,
         departementDemandeur: data.departementDemandeur,
         responsableDemande: data.responsableDemande,
