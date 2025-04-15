@@ -25,6 +25,7 @@ import Budget from "./pages/Budget";
 import FormateurDashboard from "./pages/formateur/Dashboard";
 import FormateurFormations from "./pages/formateur/Formations";
 import FormateurPlanning from "./pages/formateur/Planning";
+import GestionPointage from "./pages/formateur/GestionPointage";
 
 // Nouvelles pages pour le personnel
 import PersonnelDashboard from "./pages/personnel/Dashboard";
@@ -36,6 +37,8 @@ import VerificationDocuments from "./pages/hse/VerificationDocuments";
 
 // Nouvelles pages pour les appels d'offres
 import AppelsOffre from "./pages/appeldoffre/AppelsOffre";
+import AppelOffreDetails from "./pages/appeldoffre/AppelOffreDetails";
+import NouvelAppelOffre from "./pages/appeldoffre/NouvelAppelOffre";
 
 // Imports for new pages
 import FormationsMetiers from "./pages/formations/FormationsMetiers";
@@ -77,7 +80,12 @@ const AppRoutes = () => {
       <Route path="/admin/console" element={<ProtectedRoute element={<AdminConsole />} requiredRole={['administrateur']} />} />
       <Route path="/budget" element={<ProtectedRoute element={<Budget />} requiredRole={['administrateur', 'rh']} />} />
       <Route path="/participants" element={<ProtectedRoute element={<Participants />} />} />
+      
+      {/* Routes Appels d'offre */}
       <Route path="/appels-offre" element={<ProtectedRoute element={<AppelsOffre />} />} />
+      <Route path="/appels-offre/:id" element={<ProtectedRoute element={<AppelOffreDetails />} />} />
+      <Route path="/appels-offre/nouveau" element={<ProtectedRoute element={<NouvelAppelOffre />} />} />
+      
       <Route path="/collaboration" element={<ProtectedRoute element={<Collaboration />} />} />
 
       {/* Routes formateur */}
@@ -85,6 +93,7 @@ const AppRoutes = () => {
         <Route index element={<ProtectedRoute element={<FormateurDashboard />} requiredRole={['formateur']} />} />
         <Route path="formations" element={<ProtectedRoute element={<FormateurFormations />} requiredRole={['formateur']} />} />
         <Route path="planning" element={<ProtectedRoute element={<FormateurPlanning />} requiredRole={['formateur']} />} />
+        <Route path="pointage" element={<ProtectedRoute element={<GestionPointage />} requiredRole={['formateur']} />} />
       </Route>
 
       {/* Routes personnel et sous-traitant */}
