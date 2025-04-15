@@ -73,6 +73,17 @@ let usersData: User[] = [
     dateCreation: "2024-02-01",
     dernierLogin: "2024-03-10",
     permissions: ["formations.view", "profile.edit"]
+  },
+  {
+    id: 6,
+    nom: "Moreau",
+    prenom: "Claire",
+    email: "hse@example.com",
+    role: "hse",
+    departement: "Hygiène Sécurité Environnement",
+    dateCreation: "2024-01-20",
+    dernierLogin: "2024-03-11",
+    permissions: ["formations.view", "formations.create", "documents.verify", "documents.manage"]
   }
 ];
 

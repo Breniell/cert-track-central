@@ -1,6 +1,6 @@
 
-import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { 
   Sidebar, 
@@ -29,7 +29,14 @@ import {
   FileTextIcon,
   BarChart3Icon,
   MessageSquareIcon,
-  SettingsIcon
+  SettingsIcon,
+  BellIcon,
+  ClipboardCheckIcon,
+  HardHatIcon,
+  BriefcaseIcon,
+  BuildingIcon,
+  ClockIcon,
+  FolderIcon
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,24 +47,36 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { cn } from "@/lib/utils";
+import { Badge } from "@/components/ui/badge";
 
 interface LayoutProps {
   children: React.ReactNode;
+}
+
+interface MenuItem {
+  name: string;
+  path: string;
+  icon: React.ElementType;
+  badge?: string;
+  variant?: "default" | "secondary" | "destructive" | "outline";
+  items?: MenuItem[];
 }
 
 export default function Layout({ children }: LayoutProps) {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [notifications, setNotifications] = useState<number>(3);
 
   const getInitials = (nom?: string, prenom?: string) => {
     if (!nom || !prenom) return "U";
     return `${prenom.charAt(0)}${nom.charAt(0)}`.toUpperCase();
   };
 
-  const getRoleMenuItems = () => {
+  const getRoleMenuItems = (): MenuItem[] => {
     if (!user) return [];
 
     const commonItems = [
@@ -68,18 +87,37 @@ export default function Layout({ children }: LayoutProps) {
       case 'administrateur':
         return [
           ...commonItems,
-          { name: "Formations", path: "/formations", icon: BookOpenIcon },
+          { 
+            name: "Formations", 
+            path: "/formations", 
+            icon: BookOpenIcon,
+            items: [
+              { name: "Formations HSE", path: "/formations/hse", icon: ShieldIcon },
+              { name: "Formations Métiers", path: "/formations/metiers", icon: BriefcaseIcon },
+              { name: "Toutes les formations", path: "/formations", icon: FolderIcon }
+            ]
+          },
           { name: "Formateurs", path: "/formateurs", icon: Users2Icon },
           { name: "Participants", path: "/participants", icon: UserIcon },
-          { name: "Planning", path: "/planning", icon: CalendarIcon },
-          { name: "Admin Console", path: "/admin/console", icon: SettingsIcon },
+          { 
+            name: "Planning", 
+            path: "/planning", 
+            icon: CalendarIcon, 
+            badge: "Urgent", 
+            variant: "destructive" 
+          },
+          { name: "Vérifications HSE", path: "/hse/verification-documents", icon: FileTextIcon },
           { name: "Budget", path: "/budget", icon: BarChart3Icon },
+          { name: "Collaboration", path: "/collaboration", icon: MessageSquareIcon },
+          { name: "Admin Console", path: "/admin/console", icon: SettingsIcon }
         ];
       case 'formateur':
         return [
           { name: "Tableau de bord", path: "/formateur", icon: LayoutDashboardIcon },
           { name: "Mes formations", path: "/formateur/formations", icon: BookOpenIcon },
           { name: "Mon planning", path: "/formateur/planning", icon: CalendarIcon },
+          { name: "Pointage", path: "/formateur/pointage", icon: ClockIcon },
+          { name: "Évaluations", path: "/formateur/evaluations", icon: ClipboardCheckIcon },
         ];
       case 'personnel':
         return [
@@ -91,20 +129,33 @@ export default function Layout({ children }: LayoutProps) {
         return [
           { name: "Tableau de bord", path: "/personnel", icon: LayoutDashboardIcon },
           { name: "Catalogue formations", path: "/personnel/formations", icon: BookOpenIcon },
+          { name: "Mes documents", path: "/personnel/documents", icon: FileTextIcon },
         ];
       case 'hse':
         return [
           ...commonItems,
           { name: "Formations HSE", path: "/formations/hse", icon: ShieldIcon },
-          { name: "Vérification documents", path: "/hse/verification-documents", icon: FileTextIcon },
+          { name: "Vérification documents", path: "/hse/verification-documents", icon: FileTextIcon, badge: "Nouveau", variant: "secondary" },
+          { name: "Planning HSE", path: "/planning", icon: CalendarIcon },
+          { name: "Évaluations", path: "/hse/evaluations", icon: ClipboardCheckIcon },
         ];
       case 'rh':
         return [
           ...commonItems,
-          { name: "Formations", path: "/formations", icon: BookOpenIcon },
+          { 
+            name: "Formations", 
+            path: "/formations", 
+            icon: BookOpenIcon,
+            items: [
+              { name: "Formations HSE", path: "/formations/hse", icon: ShieldIcon },
+              { name: "Formations Métiers", path: "/formations/metiers", icon: BriefcaseIcon },
+              { name: "Toutes les formations", path: "/formations", icon: FolderIcon }
+            ]
+          },
           { name: "Participants", path: "/participants", icon: UserIcon },
           { name: "Planning", path: "/planning", icon: CalendarIcon },
           { name: "Budget", path: "/budget", icon: BarChart3Icon },
+          { name: "Appels d'offre", path: "/appels-offre", icon: BuildingIcon },
         ];
       default:
         return commonItems;
@@ -116,6 +167,66 @@ export default function Layout({ children }: LayoutProps) {
   const handleLogout = async () => {
     await logout();
   };
+
+  // Rediriger vers login si non authentifié
+  useEffect(() => {
+    if (!user && !location.pathname.includes('/login')) {
+      navigate('/login');
+    }
+  }, [user, navigate, location]);
+
+  // Fonction pour rendre les éléments de menu avec sous-menus éventuels
+  const renderMenuItems = (items: MenuItem[]) => {
+    return items.map((item) => (
+      <SidebarMenuItem key={item.path}>
+        {item.items ? (
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <SidebarMenuButton className="w-full flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <item.icon className="h-5 w-5" />
+                  <span>{item.name}</span>
+                </div>
+                {item.badge && (
+                  <Badge variant={item.variant || "default"} className="ml-2">
+                    {item.badge}
+                  </Badge>
+                )}
+              </SidebarMenuButton>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end" className="w-56">
+              {item.items.map(subItem => (
+                <DropdownMenuItem key={subItem.path} asChild>
+                  <Link to={subItem.path} className="flex items-center gap-3">
+                    <subItem.icon className="h-4 w-4" />
+                    <span>{subItem.name}</span>
+                  </Link>
+                </DropdownMenuItem>
+              ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        ) : (
+          <SidebarMenuButton asChild>
+            <Link to={item.path} className="flex items-center gap-3 justify-between">
+              <div className="flex items-center gap-3">
+                <item.icon className="h-5 w-5" />
+                <span>{item.name}</span>
+              </div>
+              {item.badge && (
+                <Badge variant={item.variant || "default"} className="ml-2">
+                  {item.badge}
+                </Badge>
+              )}
+            </Link>
+          </SidebarMenuButton>
+        )}
+      </SidebarMenuItem>
+    ));
+  };
+
+  if (!user) {
+    return <div className="min-h-screen flex items-center justify-center">Chargement...</div>;
+  }
 
   return (
     <SidebarProvider>
@@ -135,16 +246,7 @@ export default function Layout({ children }: LayoutProps) {
               <SidebarGroupLabel>Menu Principal</SidebarGroupLabel>
               <SidebarGroupContent>
                 <SidebarMenu>
-                  {menuItems.map((item) => (
-                    <SidebarMenuItem key={item.path}>
-                      <SidebarMenuButton asChild>
-                        <Link to={item.path} className="flex items-center gap-3">
-                          <item.icon className="h-5 w-5" />
-                          <span>{item.name}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
+                  {renderMenuItems(menuItems)}
                 </SidebarMenu>
               </SidebarGroupContent>
             </SidebarGroup>
@@ -214,11 +316,18 @@ export default function Layout({ children }: LayoutProps) {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className="flex items-center gap-3 px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent"
+                  className="flex items-center justify-between px-3 py-2 text-sm rounded-md hover:bg-sidebar-accent"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <item.icon className="h-5 w-5" />
-                  <span>{item.name}</span>
+                  <div className="flex items-center gap-3">
+                    <item.icon className="h-5 w-5" />
+                    <span>{item.name}</span>
+                  </div>
+                  {item.badge && (
+                    <Badge variant={item.variant || "default"} className="ml-2">
+                      {item.badge}
+                    </Badge>
+                  )}
                 </Link>
               ))}
               <button
@@ -255,14 +364,28 @@ export default function Layout({ children }: LayoutProps) {
                   <SidebarTrigger />
                 </div>
               </div>
+              
               <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon" className="relative">
+                  <BellIcon className="h-5 w-5" />
+                  {notifications > 0 && (
+                    <span className="absolute top-0 right-0 h-4 w-4 bg-red-500 rounded-full text-white text-xs flex items-center justify-center">
+                      {notifications}
+                    </span>
+                  )}
+                </Button>
+                
                 <DropdownMenu>
                   <DropdownMenuTrigger asChild>
                     <Button variant="ghost" className="relative h-8 w-8 rounded-full">
                       <Avatar className="h-8 w-8">
-                        <AvatarFallback className="bg-primary/20 text-primary">
-                          {user ? getInitials(user.nom, user.prenom) : "U"}
-                        </AvatarFallback>
+                        {user.avatar ? (
+                          <AvatarImage src={user.avatar} alt={`${user.prenom} ${user.nom}`} />
+                        ) : (
+                          <AvatarFallback className="bg-primary/20 text-primary">
+                            {getInitials(user.nom, user.prenom)}
+                          </AvatarFallback>
+                        )}
                       </Avatar>
                     </Button>
                   </DropdownMenuTrigger>
@@ -273,23 +396,26 @@ export default function Layout({ children }: LayoutProps) {
                           {user ? `${user.prenom} ${user.nom}` : "Utilisateur"}
                         </p>
                         <p className="text-xs leading-none text-muted-foreground">
-                          {user ? user.email : ""}
+                          {user.email}
                         </p>
-                        <p className="text-xs leading-none text-muted-foreground capitalize mt-1">
-                          {user ? user.role : ""}
-                        </p>
+                        <div className="flex items-center mt-1">
+                          <p className="text-xs leading-none text-muted-foreground capitalize mr-2">
+                            {user.role}
+                          </p>
+                          {user.role === 'administrateur' && (
+                            <Badge variant="secondary" className="text-xs">Admin</Badge>
+                          )}
+                        </div>
                       </div>
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem
-                      onClick={() => navigate("/profile")}
-                    >
-                      Mon profil
+                    <DropdownMenuItem onClick={() => navigate("/profile")}>
+                      <UserIcon className="mr-2 h-4 w-4" />
+                      <span>Mon profil</span>
                     </DropdownMenuItem>
-                    <DropdownMenuItem
-                      onClick={() => navigate("/parametres")}
-                    >
-                      Paramètres
+                    <DropdownMenuItem onClick={() => navigate("/parametres")}>
+                      <SettingsIcon className="mr-2 h-4 w-4" />
+                      <span>Paramètres</span>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem

@@ -1,546 +1,285 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { toast } from "@/hooks/use-toast";
-import { FileText, Plus, Search, Filter, Upload, Building, Calendar, PenSquare, Clock, Check, X, ChevronRight, Eye } from "lucide-react";
-
-// Types pour les appels d'offres
-interface AppelOffre {
-  id: number;
-  titre: string;
-  reference: string;
-  departement: string;
-  datePublication: string;
-  dateCloture: string;
-  statut: 'En préparation' | 'Publié' | 'Clôturé' | 'Attribué';
-  prestatairesRepondus: number;
-  prestaireSelectionne?: string;
-  budget: number;
-  description: string;
-}
-
-// Données de démonstration
-const appelsOffreData: AppelOffre[] = [
-  {
-    id: 1,
-    titre: "Formation en gestion de projet industriel",
-    reference: "AO-FORM-2024-001",
-    departement: "Production",
-    datePublication: "2024-02-15",
-    dateCloture: "2024-03-01",
-    statut: "Attribué",
-    prestatairesRepondus: 5,
-    prestaireSelectionne: "FormaPro Consulting",
-    budget: 3500000,
-    description: "Formation avancée en gestion de projet pour 15 chefs d'équipe du département production."
-  },
-  {
-    id: 2,
-    titre: "Formation technique en soudure TIG",
-    reference: "AO-FORM-2024-002",
-    departement: "Maintenance",
-    datePublication: "2024-03-01",
-    dateCloture: "2024-03-20",
-    statut: "Clôturé",
-    prestatairesRepondus: 3,
-    budget: 2800000,
-    description: "Formation spécialisée en techniques de soudure TIG pour 8 techniciens de maintenance."
-  },
-  {
-    id: 3,
-    titre: "Formation en excellence opérationnelle",
-    reference: "AO-FORM-2024-003",
-    departement: "Qualité",
-    datePublication: "2024-03-10",
-    dateCloture: "2024-04-05",
-    statut: "Publié",
-    prestatairesRepondus: 2,
-    budget: 4200000,
-    description: "Formation sur les méthodologies Lean et Six Sigma pour 12 cadres du département qualité."
-  },
-  {
-    id: 4,
-    titre: "Formation en techniques de vente B2B",
-    reference: "AO-FORM-2024-004",
-    departement: "Commercial",
-    datePublication: "",
-    dateCloture: "",
-    statut: "En préparation",
-    prestatairesRepondus: 0,
-    budget: 1800000,
-    description: "Formation aux méthodes de vente B2B pour l'équipe commerciale (8 personnes)."
-  }
-];
+import { 
+  Search, 
+  Plus,
+  CalendarClock,
+  Building,
+  Building2,
+  Users,
+  FileSpreadsheet,
+  Clock,
+  CheckCircle2,
+  XCircle,
+  FileCheck,
+  ArrowUpRight
+} from "lucide-react";
+import { AppelOffre, appelOffreService } from "@/services/appelOffreService";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 export default function AppelsOffre() {
   const [searchTerm, setSearchTerm] = useState("");
-  const [statusFilter, setStatusFilter] = useState("Tous");
-  const [selectedAppelOffre, setSelectedAppelOffre] = useState<AppelOffre | null>(null);
-  const [isNewDialogOpen, setIsNewDialogOpen] = useState(false);
-  
-  const filteredAppelsOffre = appelsOffreData.filter(appel => {
-    const matchesSearch = 
-      appel.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appel.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      appel.departement.toLowerCase().includes(searchTerm.toLowerCase());
+  const [appelsOffre, setAppelsOffre] = useState<AppelOffre[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [selectedType, setSelectedType] = useState<string>("Tous");
+
+  useEffect(() => {
+    const fetchAppelsOffre = async () => {
+      try {
+        const data = await appelOffreService.getAllAppelsOffre();
+        setAppelsOffre(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des appels d'offre:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    fetchAppelsOffre();
+  }, []);
+
+  const filteredAppelsOffre = appelsOffre.filter(ao => {
+    const matchesSearch = ao.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         ao.reference.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         ao.departementDemandeur.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesStatus = statusFilter === "Tous" || appel.statut === statusFilter;
+    const matchesType = selectedType === "Tous" || ao.typeFormation === selectedType;
     
-    return matchesSearch && matchesStatus;
+    return matchesSearch && matchesType;
   });
-  
-  const handleViewDetails = (appel: AppelOffre) => {
-    setSelectedAppelOffre(appel);
+
+  const getStatutBadge = (statut: AppelOffre["statut"]) => {
+    const variants = {
+      "En préparation": { color: "bg-blue-100 text-blue-700", icon: Clock },
+      "Publié": { color: "bg-amber-100 text-amber-700", icon: FileCheck },
+      "Clôturé": { color: "bg-purple-100 text-purple-700", icon: CheckCircle2 },
+      "Attribué": { color: "bg-green-100 text-green-700", icon: CheckCircle2 },
+      "Annulé": { color: "bg-red-100 text-red-700", icon: XCircle }
+    };
+    
+    const variant = variants[statut] || variants["En préparation"];
+    
+    return (
+      <div className={`flex items-center space-x-1 px-2 py-1 rounded ${variant.color}`}>
+        <variant.icon className="h-4 w-4" />
+        <span className="text-xs font-medium">{statut}</span>
+      </div>
+    );
   };
-  
-  const getStatusBadge = (status: string) => {
-    switch (status) {
-      case "En préparation":
-        return <Badge variant="outline" className="bg-blue-50 text-blue-700 border-blue-200">En préparation</Badge>;
-      case "Publié":
-        return <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">Publié</Badge>;
-      case "Clôturé":
-        return <Badge variant="outline" className="bg-amber-50 text-amber-700 border-amber-200">Clôturé</Badge>;
-      case "Attribué":
-        return <Badge variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">Attribué</Badge>;
-      default:
-        return <Badge variant="outline">Inconnu</Badge>;
-    }
-  };
-  
-  const formatMontant = (montant: number) => {
-    return new Intl.NumberFormat('fr-FR', { 
-      style: 'decimal',
-      maximumFractionDigits: 0
-    }).format(montant) + " FCFA";
-  };
-  
-  const handleCreateAppelOffre = (e: React.FormEvent) => {
-    e.preventDefault();
-    toast({
-      title: "Appel d'offre créé",
-      description: "Le nouvel appel d'offre a été créé avec succès."
-    });
-    setIsNewDialogOpen(false);
-  };
-  
+
   return (
     <Layout>
       <div className="space-y-6">
-        <div className="flex justify-between items-center">
-          <h1 className="text-2xl font-bold">Gestion des Appels d'Offres</h1>
-          <Dialog open={isNewDialogOpen} onOpenChange={setIsNewDialogOpen}>
-            <DialogTrigger asChild>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Nouvel appel d'offres
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[600px]">
-              <form onSubmit={handleCreateAppelOffre}>
-                <DialogHeader>
-                  <DialogTitle>Créer un nouvel appel d'offres</DialogTitle>
-                  <DialogDescription>
-                    Définissez les détails de l'appel d'offres pour votre formation externe.
-                  </DialogDescription>
-                </DialogHeader>
-                
-                <div className="grid gap-4 py-4">
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="titre" className="text-right">
-                      Titre
-                    </Label>
-                    <Input
-                      id="titre"
-                      placeholder="Titre de l'appel d'offres"
-                      className="col-span-3"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="departement" className="text-right">
-                      Département
-                    </Label>
-                    <Select>
-                      <SelectTrigger id="departement" className="col-span-3">
-                        <SelectValue placeholder="Sélectionnez un département" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="production">Production</SelectItem>
-                        <SelectItem value="maintenance">Maintenance</SelectItem>
-                        <SelectItem value="qualite">Qualité</SelectItem>
-                        <SelectItem value="commercial">Commercial</SelectItem>
-                        <SelectItem value="rh">Ressources Humaines</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                  
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="budget" className="text-right">
-                      Budget
-                    </Label>
-                    <Input
-                      id="budget"
-                      type="number"
-                      placeholder="Budget en FCFA"
-                      className="col-span-3"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label htmlFor="dateCloture" className="text-right">
-                      Date de clôture
-                    </Label>
-                    <Input
-                      id="dateCloture"
-                      type="date"
-                      className="col-span-3"
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-4 items-start gap-4">
-                    <Label htmlFor="description" className="text-right pt-2">
-                      Description
-                    </Label>
-                    <Textarea
-                      id="description"
-                      placeholder="Décrivez les besoins et exigences de la formation"
-                      className="col-span-3"
-                      rows={4}
-                      required
-                    />
-                  </div>
-                  
-                  <div className="grid grid-cols-4 items-center gap-4">
-                    <Label className="text-right">
-                      Documents
-                    </Label>
-                    <div className="col-span-3">
-                      <Button type="button" variant="outline" className="w-full">
-                        <Upload className="w-4 h-4 mr-2" />
-                        Téléverser un cahier des charges
-                      </Button>
-                    </div>
-                  </div>
-                </div>
-                
-                <DialogFooter>
-                  <Button type="button" variant="outline" onClick={() => setIsNewDialogOpen(false)}>
-                    Annuler
-                  </Button>
-                  <Button type="submit">Créer l'appel d'offres</Button>
-                </DialogFooter>
-              </form>
-            </DialogContent>
-          </Dialog>
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
+          <div>
+            <h1 className="text-2xl font-bold text-gray-800">Appels d'Offre</h1>
+            <p className="text-gray-500 mt-1">
+              Gérez les appels d'offre pour les formations externes
+            </p>
+          </div>
+          <Button className="gap-2">
+            <Plus className="w-4 h-4" />
+            Nouvel Appel d'Offre
+          </Button>
         </div>
-        
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative w-full md:w-96">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Clock className="h-5 w-5 mr-2 text-blue-500" />
+                En préparation
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {appelsOffre.filter(ao => ao.statut === "En préparation").length}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <FileCheck className="h-5 w-5 mr-2 text-amber-500" />
+                Publiés
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {appelsOffre.filter(ao => ao.statut === "Publié").length}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <CheckCircle2 className="h-5 w-5 mr-2 text-green-500" />
+                Attribués
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {appelsOffre.filter(ao => ao.statut === "Attribué").length}
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card>
+            <CardHeader className="pb-2">
+              <CardTitle className="text-lg flex items-center">
+                <Building2 className="h-5 w-5 mr-2 text-purple-500" />
+                Total
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{appelsOffre.length}</div>
+            </CardContent>
+          </Card>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="relative">
+            <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+              <Search className="w-5 h-5 text-gray-400" />
+            </div>
             <Input
-              type="search"
-              placeholder="Rechercher un appel d'offres..."
+              type="text"
+              placeholder="Rechercher un appel d'offre..."
               className="pl-10"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
             />
           </div>
           
-          <div className="flex items-center space-x-2">
-            <Filter className="w-5 h-5 text-gray-400" />
-            <Select
-              value={statusFilter}
-              onValueChange={setStatusFilter}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Tous les statuts" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="Tous">Tous les statuts</SelectItem>
-                <SelectItem value="En préparation">En préparation</SelectItem>
-                <SelectItem value="Publié">Publié</SelectItem>
-                <SelectItem value="Clôturé">Clôturé</SelectItem>
-                <SelectItem value="Attribué">Attribué</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
+          <Select
+            value={selectedType}
+            onValueChange={setSelectedType}
+          >
+            <SelectTrigger>
+              <SelectValue placeholder="Tous les types" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="Tous">Tous les types</SelectItem>
+              <SelectItem value="HSE">HSE</SelectItem>
+              <SelectItem value="Métier">Métier</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
-        
-        <Tabs defaultValue="liste" className="w-full">
-          <TabsList>
-            <TabsTrigger value="liste">Liste des appels d'offres</TabsTrigger>
-            {selectedAppelOffre && (
-              <TabsTrigger value="details">Détails de l'appel d'offres</TabsTrigger>
-            )}
+
+        <Tabs defaultValue="all">
+          <TabsList className="mb-4">
+            <TabsTrigger value="all">Tous</TabsTrigger>
+            <TabsTrigger value="preparation">En préparation</TabsTrigger>
+            <TabsTrigger value="published">Publiés</TabsTrigger>
+            <TabsTrigger value="closed">Clôturés / Attribués</TabsTrigger>
           </TabsList>
-          
-          <TabsContent value="liste">
-            <div className="space-y-4">
-              {filteredAppelsOffre.length > 0 ? (
-                filteredAppelsOffre.map((appel) => (
-                  <Card key={appel.id} className="hover:border-primary hover:shadow-sm transition-all">
+
+          <TabsContent value="all">
+            {isLoading ? (
+              <div className="text-center py-8">
+                <p className="text-gray-500">Chargement des appels d'offre...</p>
+              </div>
+            ) : filteredAppelsOffre.length > 0 ? (
+              <div className="space-y-4">
+                {filteredAppelsOffre.map((ao) => (
+                  <Card key={ao.id} className="overflow-hidden">
                     <CardHeader className="pb-2">
                       <div className="flex justify-between items-start">
                         <div>
-                          <CardTitle className="text-lg">{appel.titre}</CardTitle>
-                          <CardDescription>Réf: {appel.reference}</CardDescription>
+                          <div className="flex items-center gap-2">
+                            <Badge variant="outline" className="font-normal">
+                              {ao.reference}
+                            </Badge>
+                            <Badge
+                              variant={ao.typeFormation === "HSE" ? "default" : "secondary"}
+                            >
+                              {ao.typeFormation}
+                            </Badge>
+                          </div>
+                          <CardTitle className="mt-2">{ao.titre}</CardTitle>
+                          <CardDescription>{ao.description}</CardDescription>
                         </div>
-                        {getStatusBadge(appel.statut)}
+                        {getStatutBadge(ao.statut)}
                       </div>
                     </CardHeader>
-                    <CardContent className="pb-2">
+                    <CardContent>
                       <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
-                        <div className="flex items-center">
-                          <Building className="w-4 h-4 mr-2 text-gray-400" />
-                          <span>{appel.departement}</span>
-                        </div>
-                        
-                        {appel.datePublication && (
-                          <div className="flex items-center">
-                            <Calendar className="w-4 h-4 mr-2 text-gray-400" />
-                            <span>Pub: {new Date(appel.datePublication).toLocaleDateString('fr-FR')}</span>
+                        <div className="flex items-center gap-2">
+                          <CalendarClock className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <div className="font-medium">Publication</div>
+                            <div className="text-gray-500">{ao.datePublication || "Non publié"}</div>
                           </div>
-                        )}
-                        
-                        {appel.dateCloture && (
-                          <div className="flex items-center">
-                            <Clock className="w-4 h-4 mr-2 text-gray-400" />
-                            <span>Clôture: {new Date(appel.dateCloture).toLocaleDateString('fr-FR')}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex items-center font-medium">
-                          <span>{formatMontant(appel.budget)}</span>
                         </div>
-                      </div>
-                      
-                      <div className="mt-4 text-sm">
-                        <p className="text-gray-600 line-clamp-2">{appel.description}</p>
+                        <div className="flex items-center gap-2">
+                          <CalendarClock className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <div className="font-medium">Clôture</div>
+                            <div className="text-gray-500">{ao.dateCloture || "Non défini"}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Building className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <div className="font-medium">Département</div>
+                            <div className="text-gray-500">{ao.departementDemandeur}</div>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <Users className="h-4 w-4 text-gray-400" />
+                          <div>
+                            <div className="font-medium">Prestataires</div>
+                            <div className="text-gray-500">
+                              {ao.prestataires ? `${ao.prestataires.length} invité(s)` : "Aucun invité"}
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </CardContent>
-                    <CardFooter className="flex justify-between">
-                      <div className="text-sm text-gray-500">
-                        {appel.prestatairesRepondus} prestataire(s) {appel.statut === 'Clôturé' || appel.statut === 'Attribué' ? 'ont répondu' : 'ont répondu pour l\'instant'}
-                      </div>
-                      <Button variant="ghost" size="sm" onClick={() => handleViewDetails(appel)}>
-                        <Eye className="w-4 h-4 mr-2" />
-                        Détails
+                    <CardFooter className="flex justify-end bg-gray-50">
+                      <Button variant="outline" size="sm" asChild>
+                        <a href={`/appels-offre/${ao.id}`} className="flex items-center gap-1">
+                          Voir les détails
+                          <ArrowUpRight className="h-3.5 w-3.5" />
+                        </a>
                       </Button>
                     </CardFooter>
                   </Card>
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="flex items-center justify-center h-40">
-                    <p className="text-gray-500">Aucun appel d'offres ne correspond à vos critères.</p>
-                  </CardContent>
-                </Card>
-              )}
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 bg-gray-50 rounded-lg">
+                <FileSpreadsheet className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <p className="text-gray-500">Aucun appel d'offre ne correspond à votre recherche.</p>
+              </div>
+            )}
+          </TabsContent>
+          
+          {/* Les autres onglets auraient un contenu similaire mais filtré */}
+          <TabsContent value="preparation">
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Filtrage par statut "En préparation".</p>
             </div>
           </TabsContent>
           
-          <TabsContent value="details">
-            {selectedAppelOffre && (
-              <div className="space-y-6">
-                <Card>
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div>
-                        <CardTitle>{selectedAppelOffre.titre}</CardTitle>
-                        <CardDescription>Référence: {selectedAppelOffre.reference}</CardDescription>
-                      </div>
-                      {getStatusBadge(selectedAppelOffre.statut)}
-                    </div>
-                  </CardHeader>
-                  <CardContent className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-500">Département</p>
-                        <p className="font-medium">{selectedAppelOffre.departement}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-500">Budget</p>
-                        <p className="font-medium">{formatMontant(selectedAppelOffre.budget)}</p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-500">Prestataires</p>
-                        <p className="font-medium">{selectedAppelOffre.prestatairesRepondus} réponses</p>
-                      </div>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-500">Date de publication</p>
-                        <p className="font-medium">
-                          {selectedAppelOffre.datePublication 
-                            ? new Date(selectedAppelOffre.datePublication).toLocaleDateString('fr-FR') 
-                            : "Non publié"}
-                        </p>
-                      </div>
-                      <div className="space-y-1">
-                        <p className="text-sm text-gray-500">Date de clôture</p>
-                        <p className="font-medium">
-                          {selectedAppelOffre.dateCloture 
-                            ? new Date(selectedAppelOffre.dateCloture).toLocaleDateString('fr-FR') 
-                            : "Non définie"}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-500">Description</p>
-                      <div className="bg-gray-50 p-4 rounded-md">
-                        <p>{selectedAppelOffre.description}</p>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <p className="text-sm text-gray-500">Documents associés</p>
-                      <div className="bg-gray-50 p-4 rounded-md">
-                        <div className="flex items-center">
-                          <FileText className="w-5 h-5 mr-2 text-gray-400" />
-                          <span className="text-sm">cahier_des_charges_{selectedAppelOffre.reference}.pdf</span>
-                          <Button variant="ghost" size="sm" className="ml-auto">
-                            Télécharger
-                          </Button>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {selectedAppelOffre.statut === 'Attribué' && selectedAppelOffre.prestaireSelectionne && (
-                      <div className="bg-green-50 p-4 rounded-md">
-                        <div className="flex items-center">
-                          <Check className="w-5 h-5 mr-2 text-green-600" />
-                          <div>
-                            <p className="font-medium">Appel d'offres attribué à:</p>
-                            <p className="text-green-800">{selectedAppelOffre.prestaireSelectionne}</p>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </CardContent>
-                  <CardFooter className="flex justify-between">
-                    <Button variant="outline" onClick={() => setSelectedAppelOffre(null)}>
-                      Retour à la liste
-                    </Button>
-                    
-                    <div className="flex gap-2">
-                      {selectedAppelOffre.statut === 'En préparation' && (
-                        <>
-                          <Button variant="outline">
-                            <PenSquare className="w-4 h-4 mr-2" />
-                            Modifier
-                          </Button>
-                          <Button>
-                            Publier
-                          </Button>
-                        </>
-                      )}
-                      
-                      {selectedAppelOffre.statut === 'Publié' && (
-                        <Button>
-                          Clôturer
-                        </Button>
-                      )}
-                      
-                      {selectedAppelOffre.statut === 'Clôturé' && (
-                        <Button>
-                          Attribuer
-                        </Button>
-                      )}
-                    </div>
-                  </CardFooter>
-                </Card>
-                
-                {(selectedAppelOffre.statut === 'Clôturé' || selectedAppelOffre.statut === 'Attribué') && (
-                  <Card>
-                    <CardHeader>
-                      <CardTitle>Prestataires ayant répondu</CardTitle>
-                      <CardDescription>
-                        Liste des prestataires et leurs propositions pour cet appel d'offres
-                      </CardDescription>
-                    </CardHeader>
-                    <CardContent>
-                      <div className="border rounded-md overflow-hidden">
-                        <table className="min-w-full divide-y divide-gray-200">
-                          <thead className="bg-gray-50">
-                            <tr>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Prestataire</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Date de réponse</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Montant</th>
-                              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Statut</th>
-                              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-                            </tr>
-                          </thead>
-                          <tbody className="bg-white divide-y divide-gray-200">
-                            {/* Données de démonstration */}
-                            <tr className={selectedAppelOffre.prestaireSelectionne === "FormaPro Consulting" ? "bg-green-50" : ""}>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">FormaPro Consulting</div>
-                                <div className="text-sm text-gray-500">contact@formapro.com</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                2024-02-20
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                3.200.000 FCFA
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                {selectedAppelOffre.prestaireSelectionne === "FormaPro Consulting" ? (
-                                  <Badge variant="outline" className="bg-green-50 text-green-700 border-green-200">
-                                    <Check className="w-3 h-3 mr-1" /> Sélectionné
-                                  </Badge>
-                                ) : (
-                                  <Badge variant="outline">Répondu</Badge>
-                                )}
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="w-3 h-3 mr-1" /> Voir
-                                </Button>
-                              </td>
-                            </tr>
-                            <tr>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <div className="text-sm font-medium text-gray-900">SkillDev Centre</div>
-                                <div className="text-sm text-gray-500">info@skilldev.com</div>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                2024-02-22
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                3.500.000 FCFA
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap">
-                                <Badge variant="outline">Répondu</Badge>
-                              </td>
-                              <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <Button variant="ghost" size="sm">
-                                  <Eye className="w-3 h-3 mr-1" /> Voir
-                                </Button>
-                              </td>
-                            </tr>
-                          </tbody>
-                        </table>
-                      </div>
-                    </CardContent>
-                  </Card>
-                )}
-              </div>
-            )}
+          <TabsContent value="published">
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Filtrage par statut "Publié".</p>
+            </div>
+          </TabsContent>
+          
+          <TabsContent value="closed">
+            <div className="text-center py-8 bg-gray-50 rounded-lg">
+              <p className="text-gray-500">Filtrage par statut "Clôturé" ou "Attribué".</p>
+            </div>
           </TabsContent>
         </Tabs>
       </div>

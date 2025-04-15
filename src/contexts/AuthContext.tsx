@@ -49,6 +49,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       
       // Rediriger vers la page d'accueil appropriée selon le rôle
       switch (user.role) {
+        case "administrateur":
+          navigate("/admin");
+          break;
         case "formateur":
           navigate("/formateur");
           break;
@@ -60,6 +63,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           break;
         case "sous-traitant":
           navigate("/personnel/formations");
+          break;
+        case "rh":
+          navigate("/formations");
           break;
         default:
           navigate("/");
