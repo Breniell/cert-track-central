@@ -107,14 +107,14 @@ export default function NouvelAppelOffre() {
 
   // Setting up field arrays for qualifications
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
-    useFieldArray({
+    useFieldArray<AppelOffreFormData>({
       control,
       name: "criteres.qualification",
     });
 
   // Setting up field arrays for other criteria
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
-    useFieldArray({
+    useFieldArray<AppelOffreFormData>({
       control,
       name: "criteres.autres",
     });
