@@ -105,18 +105,18 @@ export default function NouvelAppelOffre() {
       name: "documents",
     });
 
-  // Setting up field arrays for qualifications - Fixed type definition and field path
+  // Fixed: Properly nested field array for qualifications
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
-      name: "criteres.qualification",
+      name: "criteres.qualification" as const,
     });
 
-  // Setting up field arrays for other criteria - Fixed type definition and field path
+  // Fixed: Properly nested field array for other criteria
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
     useFieldArray({
       control,
-      name: "criteres.autres",
+      name: "criteres.autres" as const,
     });
 
   const onSubmit = async (data: AppelOffreFormData) => {
@@ -449,7 +449,7 @@ export default function NouvelAppelOffre() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendQualification("" as any)}
+                    onClick={() => appendQualification("")}
                     className="mt-2"
                   >
                     <Plus className="h-4 w-4 mr-2" />
@@ -491,7 +491,7 @@ export default function NouvelAppelOffre() {
                     type="button"
                     variant="outline"
                     size="sm"
-                    onClick={() => appendAutre("" as any)}
+                    onClick={() => appendAutre("")}
                     className="mt-2"
                   >
                     <Plus className="h-4 w-4 mr-2" />
