@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { Calendar, Views, momentLocalizer } from "react-big-calendar";
 import { format, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, addMonths, subMonths } from "date-fns";
@@ -543,7 +542,7 @@ export function CentralizedCalendar({ onEventSelect, onNewEvent }: CentralizedCa
                 <div>
                   <Label className="text-sm text-gray-500">Type</Label>
                   <div className="font-medium">
-                    <Badge variant={selectedEvent.type === 'HSE' ? 'info' : 'success'}>
+                    <Badge variant={selectedEvent.type === 'HSE' ? 'secondary' : 'success'}>
                       {selectedEvent.type}
                     </Badge>
                     {selectedEvent.estUrgente && (
