@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,8 +9,9 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
-import { Lock, Mail, User, Key, Shield, Fingerprint, AlertTriangle } from "lucide-react";
+import { Lock, Mail, Shield, User, Key, Fingerprint, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 // Schéma de validation pour le formulaire de connexion
 const loginSchema = z.object({
@@ -24,6 +24,10 @@ const mfaSchema = z.object({
   code: z.string().length(6, "Le code doit contenir exactement 6 chiffres"),
 });
 
+const pinSchema = z.object({
+  pin: z.string().length(4, "Le code PIN doit contenir exactement 4 chiffres"),
+});
+
 export default function Login() {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -31,6 +35,9 @@ export default function Login() {
   const [isLoading, setIsLoading] = useState(false);
   const [requireMFA, setRequireMFA] = useState(false);
   const [userId, setUserId] = useState<string | null>(null);
+
+  const [showPinInput, setShowPinInput] = useState(false);
+  const [tempUserId, setTempUserId] = useState<number | null>(null);
 
   // Formulaire de connexion
   const loginForm = useForm<z.infer<typeof loginSchema>>({
@@ -49,33 +56,24 @@ export default function Login() {
     },
   });
 
+  const pinForm = useForm<z.infer<typeof pinSchema>>({
+    resolver: zodResolver(pinSchema),
+    defaultValues: {
+      pin: "",
+    },
+  });
+
   // Gestion de la soumission du formulaire de connexion
   const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
-      // Simuler l'authentification (à remplacer par un appel API réel)
-      const response = await new Promise<{userId: string, requireMFA: boolean}>((resolve) => {
-        setTimeout(() => {
-          resolve({ userId: "user-123", requireMFA: true });
-        }, 1000);
+      const response = await authService.login(values.email, values.password);
+      setTempUserId(response.user.id);
+      setShowPinInput(true);
+      toast({
+        title: "Vérification requise",
+        description: "Veuillez entrer votre code PIN à 4 chiffres.",
       });
-
-      if (response.requireMFA) {
-        setUserId(response.userId);
-        setRequireMFA(true);
-        toast({
-          title: "Vérification en deux étapes requise",
-          description: "Veuillez entrer le code de vérification qui a été envoyé à votre appareil.",
-        });
-      } else {
-        // Connexion réussie sans MFA
-        login(response.userId, "admin");
-        toast({
-          title: "Connexion réussie",
-          description: "Bienvenue sur la plateforme de gestion de formations.",
-        });
-        navigate("/");
-      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -116,6 +114,42 @@ export default function Login() {
     }
   };
 
+  // Gestion de la soumission du code PIN
+  const onPinSubmit = async (values: z.infer<typeof pinSchema>) => {
+    if (!tempUserId) return;
+    
+    setIsLoading(true);
+    try {
+      const isPinValid = await authService.verifyPin(tempUserId, values.pin);
+      
+      if (isPinValid) {
+        const userData = await authService.getUserById(tempUserId);
+        if (userData) {
+          login(tempUserId.toString(), userData.role);
+          toast({
+            title: "Connexion réussie",
+            description: `Bienvenue ${userData.prenom} ${userData.nom}`,
+          });
+          navigate("/");
+        }
+      } else {
+        toast({
+          variant: "destructive",
+          title: "Code PIN invalide",
+          description: "Le code PIN entré est incorrect. Veuillez réessayer.",
+        });
+      }
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur",
+        description: "Une erreur est survenue. Veuillez réessayer.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   // Gestion de la connexion SSO
   const handleSSOLogin = async (provider: string) => {
     setIsLoading(true);
@@ -143,6 +177,62 @@ export default function Login() {
       setIsLoading(false);
     }
   };
+
+  if (showPinInput) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-4">
+        <div className="w-full max-w-md">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Shield className="mr-2 h-5 w-5 text-primary" />
+                Code PIN
+              </CardTitle>
+              <CardDescription>
+                Veuillez entrer votre code PIN à 4 chiffres
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...pinForm}>
+                <form onSubmit={pinForm.handleSubmit(onPinSubmit)} className="space-y-4">
+                  <FormField
+                    control={pinForm.control}
+                    name="pin"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormControl>
+                          <InputOTP
+                            maxLength={4}
+                            render={({ slots }) => (
+                              <InputOTPGroup>
+                                {slots.map((slot, index) => (
+                                  <InputOTPSlot key={index} {...slot} />
+                                ))}
+                              </InputOTPGroup>
+                            )}
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Vérification..." : "Valider"}
+                  </Button>
+                </form>
+              </Form>
+              <div className="mt-4 text-center">
+                <Button variant="link" onClick={() => setShowPinInput(false)} disabled={isLoading}>
+                  Retour à la connexion
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-4">

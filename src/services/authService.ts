@@ -1,4 +1,3 @@
-
 export type UserRole = 'administrateur' | 'rh' | 'hse' | 'formateur' | 'personnel' | 'sous-traitant';
 
 export interface User {
@@ -14,6 +13,7 @@ export interface User {
   dateCreation: string;
   dernierLogin?: string;
   permissions: string[];
+  pin: string;
 }
 
 // Simule une base de données pour les utilisateurs
@@ -27,7 +27,8 @@ let usersData: User[] = [
     role: "administrateur",
     dateCreation: "2024-01-01",
     dernierLogin: "2024-03-15",
-    permissions: ["all"]
+    permissions: ["all"],
+    pin: "1234" // PIN par défaut pour l'administrateur
   },
   {
     id: 2,
@@ -39,7 +40,8 @@ let usersData: User[] = [
     departement: "Ressources Humaines",
     dateCreation: "2024-01-05",
     dernierLogin: "2024-03-14",
-    permissions: ["formations.view", "formations.create", "participants.view", "participants.create", "reporting.view"]
+    permissions: ["formations.view", "formations.create", "participants.view", "participants.create", "reporting.view"],
+    pin: "5678" // PIN par défaut pour RH
   },
   {
     id: 3,
@@ -50,7 +52,8 @@ let usersData: User[] = [
     departement: "Formation",
     dateCreation: "2024-01-10",
     dernierLogin: "2024-03-13",
-    permissions: ["formations.view", "formations.manage", "participants.view", "evaluations.create", "evaluations.manage"]
+    permissions: ["formations.view", "formations.manage", "participants.view", "evaluations.create", "evaluations.manage"],
+    pin: "9012" // PIN par défaut pour formateur
   },
   {
     id: 4,
@@ -61,7 +64,8 @@ let usersData: User[] = [
     departement: "Production",
     dateCreation: "2024-01-15",
     dernierLogin: "2024-03-12",
-    permissions: ["formations.view", "profile.edit"]
+    permissions: ["formations.view", "profile.edit"],
+    pin: "3456" // PIN par défaut pour personnel
   },
   {
     id: 5,
@@ -72,7 +76,8 @@ let usersData: User[] = [
     entreprise: "ExternalTech SA",
     dateCreation: "2024-02-01",
     dernierLogin: "2024-03-10",
-    permissions: ["formations.view", "profile.edit"]
+    permissions: ["formations.view", "profile.edit"],
+    pin: "7890" // PIN par défaut pour sous-traitant
   },
   {
     id: 6,
@@ -83,7 +88,8 @@ let usersData: User[] = [
     departement: "Hygiène Sécurité Environnement",
     dateCreation: "2024-01-20",
     dernierLogin: "2024-03-11",
-    permissions: ["formations.view", "formations.create", "documents.verify", "documents.manage"]
+    permissions: ["formations.view", "formations.create", "documents.verify", "documents.manage"],
+    pin: "4321" // PIN par défaut pour HSE
   }
 ];
 
@@ -168,7 +174,7 @@ export const authService = {
         const newUser: User = {
           ...user,
           id: Math.max(...usersData.map(u => u.id)) + 1,
-          dateCreation: new Date().toISOString().split('T')[0]
+          dateCreation: new Date().toISOString().split('T')[0],
         };
         usersData.push(newUser);
         resolve(newUser);
@@ -207,6 +213,14 @@ export const authService = {
         const hasPermission = user.permissions.includes("all") || user.permissions.includes(permission);
         resolve(hasPermission);
       }, 200);
+    });
+  },
+  verifyPin: async (userId: number, pin: string): Promise<boolean> => {
+    return new Promise((resolve) => {
+      setTimeout(() => {
+        const user = usersData.find(u => u.id === userId);
+        resolve(user?.pin === pin);
+      }, 300);
     });
   }
 };
