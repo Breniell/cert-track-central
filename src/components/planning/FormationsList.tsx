@@ -5,9 +5,10 @@ import { Formation } from "@/types/Formation";
 interface FormationsListProps {
   formations: Formation[];
   onViewDetails: (id: number) => void;
+  onEdit: (id: number) => void;
 }
 
-export default function FormationsList({ formations, onViewDetails }: FormationsListProps) {
+export default function FormationsList({ formations, onViewDetails, onEdit }: FormationsListProps) {
   if (formations.length === 0) {
     return (
       <div className="text-center py-8">
@@ -23,6 +24,7 @@ export default function FormationsList({ formations, onViewDetails }: Formations
           key={formation.id}
           formation={formation}
           onViewDetails={onViewDetails}
+          onEdit={onEdit}
         />
       ))}
     </div>

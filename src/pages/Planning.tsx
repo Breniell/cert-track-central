@@ -4,7 +4,7 @@ import Layout from "@/components/layout/Layout";
 import { toast } from "@/hooks/use-toast";
 import { useFormations } from "@/hooks/useFormations";
 import PlanningFilters from "@/components/planning/PlanningFilters";
-import FormationCard from "@/components/planning/FormationCard";
+import FormationsList from "@/components/planning/FormationsList";
 import NewFormationDialog from "@/components/planning/NewFormationDialog";
 import FormationDetailsDialog from "@/components/planning/FormationDetailsDialog";
 import { Button } from "@/components/ui/button";
@@ -39,6 +39,13 @@ export default function Planning() {
       setIsDetailsDialogOpen(true);
     }
   };
+  
+  const handleEditFormation = (id: number) => {
+    toast({
+      title: "Modification de formation",
+      description: "Fonctionnalité de modification en cours de développement."
+    });
+  };
 
   return (
     <Layout>
@@ -69,21 +76,11 @@ export default function Planning() {
           onTypeChange={setSelectedType}
         />
 
-        <div className="space-y-4">
-          {filteredFormations.length > 0 ? (
-            filteredFormations.map((formation) => (
-              <FormationCard
-                key={formation.id}
-                formation={formation}
-                onViewDetails={handleViewDetails}
-              />
-            ))
-          ) : (
-            <div className="text-center py-8">
-              <p className="text-gray-500">Aucune formation ne correspond à vos critères de recherche.</p>
-            </div>
-          )}
-        </div>
+        <FormationsList 
+          formations={filteredFormations} 
+          onViewDetails={handleViewDetails}
+          onEdit={handleEditFormation}
+        />
       </div>
 
       <NewFormationDialog
