@@ -12,7 +12,8 @@ import { Plus, Download, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { addMonths } from "date-fns";
+import { addMonths, format } from "date-fns";
+import { DateRange } from "react-day-picker";
 
 export default function Planning() {
   const navigate = useNavigate();
@@ -33,7 +34,7 @@ export default function Planning() {
   const [selectedFormation, setSelectedFormation] = useState(null);
   
   // État pour le filtre de date
-  const [dateRange, setDateRange] = useState({
+  const [dateRange, setDateRange] = useState<DateRange>({
     from: new Date(),
     to: addMonths(new Date(), 1)
   });
@@ -62,6 +63,13 @@ export default function Planning() {
   
   const handleViewCalendar = () => {
     navigate('/planning/general');
+  };
+
+  // Gérer le changement de date avec le bon typage
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    if (range) {
+      setDateRange(range);
+    }
   };
 
   return (
@@ -98,7 +106,7 @@ export default function Planning() {
               <h3 className="text-sm font-medium mb-2">Période</h3>
               <DatePickerWithRange 
                 date={dateRange} 
-                onDateChange={setDateRange}
+                onDateChange={handleDateRangeChange}
               />
             </div>
             

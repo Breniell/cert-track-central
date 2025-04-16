@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, MapPin, Users, FileText, User, CheckCircle, AlertCircle } from "lucide-react";
-import { Formation } from "./FormationCard";
+import { Formation } from "@/types/Formation";
 
 interface FormationDetailsDialogProps {
   isOpen: boolean;
