@@ -18,14 +18,14 @@ export function CriteresStep({ control }: CriteresStepProps) {
   const { fields: qualificationFields, append: appendQualification, remove: removeQualification } = 
     useFieldArray({
       control,
-      name: "criteres.qualification" as any, // Type cast to fix TypeScript error
+      name: "criteres.qualification",
     });
 
   // Use useFieldArray to manage dynamic arrays of other criteria
   const { fields: autresFields, append: appendAutre, remove: removeAutre } = 
     useFieldArray({
       control,
-      name: "criteres.autres" as any, // Type cast to fix TypeScript error
+      name: "criteres.autres",
     });
 
   return (
@@ -84,7 +84,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendQualification("" as any)} // Type cast to fix TypeScript error
+            onClick={() => appendQualification("")}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
@@ -136,7 +136,7 @@ export function CriteresStep({ control }: CriteresStepProps) {
             type="button"
             variant="outline"
             size="sm"
-            onClick={() => appendAutre("" as any)} // Type cast to fix TypeScript error
+            onClick={() => appendAutre("")}
             className="mt-2"
           >
             <Plus className="h-4 w-4 mr-2" />
