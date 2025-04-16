@@ -49,6 +49,9 @@ import FormateurProfile from "./pages/formateurs/FormateurProfile";
 import EvaluationManager from "./pages/evaluations/EvaluationManager";
 import BudgetManager from "./pages/budget/BudgetManager";
 
+// Nouvelle page pour le système anti-triche
+import QuizzAntiTriche from "./pages/evaluations/QuizzAntiTriche";
+
 // Route protégée par authentification
 const ProtectedRoute = ({ element, requiredRole }: { element: JSX.Element, requiredRole?: string[] }) => {
   const { user, isLoading } = useAuth();
@@ -88,6 +91,7 @@ const AppRoutes = () => {
       <Route path="/budget/manager" element={<ProtectedRoute element={<BudgetManager />} requiredRole={['administrateur', 'rh']} />} />
       <Route path="/participants" element={<ProtectedRoute element={<Participants />} />} />
       <Route path="/evaluations" element={<ProtectedRoute element={<EvaluationManager />} requiredRole={['administrateur', 'formateur', 'rh']} />} />
+      <Route path="/evaluations/quiz/:id" element={<ProtectedRoute element={<QuizzAntiTriche />} />} />
       
       {/* Routes Appels d'offre */}
       <Route path="/appels-offre" element={<ProtectedRoute element={<AppelsOffre />} />} />
