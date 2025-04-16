@@ -12,6 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Lock, Mail, Shield, User, Key, Fingerprint, AlertTriangle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
+import { authService } from "@/services/authService";
 
 // Schéma de validation pour le formulaire de connexion
 const loginSchema = z.object({
@@ -205,8 +206,8 @@ export default function Login() {
                             maxLength={4}
                             render={({ slots }) => (
                               <InputOTPGroup>
-                                {slots.map((slot, index) => (
-                                  <InputOTPSlot key={index} {...slot} />
+                                {slots.map((slot, i) => (
+                                  <InputOTPSlot key={i} index={i} {...slot} />
                                 ))}
                               </InputOTPGroup>
                             )}
