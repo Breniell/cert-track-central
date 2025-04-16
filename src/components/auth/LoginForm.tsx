@@ -9,6 +9,8 @@ import { Input } from "@/components/ui/input";
 import { Mail, Lock } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/authService";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { InfoCircled } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -26,8 +28,8 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: "jean.dupont@example.com",
+      password: "password123",
     },
   });
 
@@ -52,54 +54,63 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   };
 
   return (
-    <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>E-mail</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                  <Input {...field} className="pl-10" placeholder="nom@entreprise.com" />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Mot de passe</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
-                  <Input
-                    {...field}
-                    type="password"
-                    className="pl-10"
-                    placeholder="Votre mot de passe"
-                  />
-                </div>
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <Button type="submit" className="w-full" disabled={isLoading}>
-          {isLoading ? "Connexion en cours..." : "Se connecter"}
-        </Button>
-      </form>
-      <div className="mt-4 text-center">
-        <Button variant="link" className="px-2">
-          Mot de passe oublié ?
-        </Button>
-      </div>
-    </Form>
+    <div className="space-y-6">
+      <Alert>
+        <InfoCircled className="h-4 w-4" />
+        <AlertTitle>Exemple de connexion</AlertTitle>
+        <AlertDescription>
+          <div className="mt-2 space-y-2 text-sm">
+            <p><strong>Email:</strong> jean.dupont@example.com</p>
+            <p><strong>Mot de passe:</strong> password123</p>
+            <p><strong>Code PIN:</strong> 1234</p>
+          </div>
+        </AlertDescription>
+      </Alert>
+
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <FormField
+            control={form.control}
+            name="email"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>E-mail</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                    <Input {...field} className="pl-10" placeholder="nom@entreprise.com" />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <FormField
+            control={form.control}
+            name="password"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Mot de passe</FormLabel>
+                <FormControl>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                    <Input
+                      {...field}
+                      type="password"
+                      className="pl-10"
+                      placeholder="Votre mot de passe"
+                    />
+                  </div>
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Connexion en cours..." : "Se connecter"}
+          </Button>
+        </form>
+      </Form>
+    </div>
   );
 }
