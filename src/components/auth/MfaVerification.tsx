@@ -44,7 +44,7 @@ export function MfaVerification({ userId, onBack }: MfaVerificationProps) {
         }, 1000);
       });
 
-      login(userId, "admin");
+      login(userId, "administrateur");
       toast({
         title: "Vérification réussie",
         description: "Bienvenue sur la plateforme de gestion de formations.",

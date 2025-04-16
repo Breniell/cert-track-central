@@ -22,7 +22,7 @@ export function SsoLogin() {
         }, 1500);
       });
 
-      login("user-sso-123", "admin");
+      login("user-sso-123", "administrateur");
       toast({
         title: "Connexion SSO réussie",
         description: `Connexion réussie via ${provider}.`,
