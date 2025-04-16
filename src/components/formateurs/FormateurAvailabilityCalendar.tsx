@@ -1,9 +1,10 @@
 
 import { useState } from "react";
 import { Formateur } from "@/types/Formation";
-import { Calendar } from "@/components/ui/calendar";
+import { Calendar, CalendarProps } from "@/components/ui/calendar";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
+import { DayProps } from "react-day-picker";
 
 interface FormateurAvailabilityCalendarProps {
   formateur: Formateur;
@@ -54,7 +55,7 @@ export function FormateurAvailabilityCalendar({
         day_today: "bg-primary/5 text-primary font-bold",
       }}
       components={{
-        Day: ({ date, className, ...props }) => (
+        Day: ({ date, className, ...props }: DayProps & { className?: string }) => (
           <div
             {...props}
             className={cn(
