@@ -1,4 +1,3 @@
-
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -6,11 +5,10 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Mail, Lock } from "lucide-react";
+import { Mail, Lock, Info } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/authService";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { InfoCircled } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Adresse e-mail invalide"),
@@ -56,7 +54,7 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   return (
     <div className="space-y-6">
       <Alert>
-        <InfoCircled className="h-4 w-4" />
+        <Info className="h-4 w-4" />
         <AlertTitle>Exemple de connexion</AlertTitle>
         <AlertDescription>
           <div className="mt-2 space-y-2 text-sm">
