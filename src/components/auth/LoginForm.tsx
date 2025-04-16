@@ -1,3 +1,4 @@
+
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -34,13 +35,16 @@ export function LoginForm({ onLoginSuccess }: LoginFormProps) {
   const onSubmit = async (values: z.infer<typeof loginSchema>) => {
     setIsLoading(true);
     try {
+      console.log("Tentative de connexion avec:", values);
       const response = await authService.login(values.email, values.password);
+      console.log("Réponse de connexion:", response);
       onLoginSuccess(response.user.id);
       toast({
         title: "Vérification requise",
         description: "Veuillez entrer votre code PIN à 4 chiffres.",
       });
     } catch (error) {
+      console.error("Erreur de connexion:", error);
       toast({
         variant: "destructive",
         title: "Erreur de connexion",

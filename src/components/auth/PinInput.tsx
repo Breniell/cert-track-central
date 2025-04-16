@@ -37,15 +37,19 @@ export function PinInput({ userId, onBack }: PinInputProps) {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof pinSchema>) => {
+  const verifyPinAndLogin = async (pin: string) => {
     if (!userId) return;
     
     setIsLoading(true);
     try {
-      const isPinValid = await authService.verifyPin(userId, values.pin);
+      console.log(`Vérification du PIN ${pin} pour l'utilisateur ${userId}`);
+      const isPinValid = await authService.verifyPin(userId, pin);
+      console.log(`PIN valide: ${isPinValid}`);
       
       if (isPinValid) {
         const userData = await authService.getUserById(userId);
+        console.log(`Données utilisateur:`, userData);
+        
         if (userData) {
           login(userId.toString(), userData.role);
           toast({
@@ -62,6 +66,7 @@ export function PinInput({ userId, onBack }: PinInputProps) {
         });
       }
     } catch (error) {
+      console.error("Erreur de vérification du PIN:", error);
       toast({
         variant: "destructive",
         title: "Erreur",
@@ -70,6 +75,10 @@ export function PinInput({ userId, onBack }: PinInputProps) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const onSubmit = async (values: z.infer<typeof pinSchema>) => {
+    await verifyPinAndLogin(values.pin);
   };
 
   // Gestionnaire pour la saisie manuelle du PIN
@@ -84,36 +93,7 @@ export function PinInput({ userId, onBack }: PinInputProps) {
       return;
     }
 
-    setIsLoading(true);
-    try {
-      const isPinValid = await authService.verifyPin(userId, manualPin);
-      
-      if (isPinValid) {
-        const userData = await authService.getUserById(userId);
-        if (userData) {
-          login(userId.toString(), userData.role);
-          toast({
-            title: "Connexion réussie",
-            description: `Bienvenue ${userData.prenom} ${userData.nom}`,
-          });
-          navigate("/");
-        }
-      } else {
-        toast({
-          variant: "destructive",
-          title: "Code PIN invalide",
-          description: "Le code PIN entré est incorrect. Veuillez réessayer.",
-        });
-      }
-    } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Une erreur est survenue. Veuillez réessayer.",
-      });
-    } finally {
-      setIsLoading(false);
-    }
+    await verifyPinAndLogin(manualPin);
   };
 
   return (

@@ -5,14 +5,17 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertTriangle } from "lucide-react";
 import { LoginForm } from "@/components/auth/LoginForm";
 import { PinInput } from "@/components/auth/PinInput";
-import { MfaVerification } from "@/components/auth/MfaVerification";
 import { SsoLogin } from "@/components/auth/SsoLogin";
 
 export default function Login() {
   const [showPinInput, setShowPinInput] = useState(false);
-  const [requireMFA, setRequireMFA] = useState(false);
   const [tempUserId, setTempUserId] = useState<number | null>(null);
-  const [userId, setUserId] = useState<string | null>(null);
+
+  const handleLoginSuccess = (userId: number) => {
+    console.log("Connexion réussie, redirection vers la saisie du PIN", userId);
+    setTempUserId(userId);
+    setShowPinInput(true);
+  };
 
   if (showPinInput && tempUserId) {
     return (
@@ -21,19 +24,6 @@ export default function Login() {
           <PinInput
             userId={tempUserId}
             onBack={() => setShowPinInput(false)}
-          />
-        </div>
-      </div>
-    );
-  }
-
-  if (requireMFA && userId) {
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-4">
-        <div className="w-full max-w-md">
-          <MfaVerification
-            userId={userId}
-            onBack={() => setRequireMFA(false)}
           />
         </div>
       </div>
@@ -62,12 +52,7 @@ export default function Login() {
                 <TabsTrigger value="sso">SSO</TabsTrigger>
               </TabsList>
               <TabsContent value="credentials">
-                <LoginForm
-                  onLoginSuccess={(userId) => {
-                    setTempUserId(userId);
-                    setShowPinInput(true);
-                  }}
-                />
+                <LoginForm onLoginSuccess={handleLoginSuccess} />
               </TabsContent>
               <TabsContent value="sso">
                 <SsoLogin />

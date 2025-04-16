@@ -2,12 +2,12 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { toast } from "@/components/ui/use-toast";
-import { authService, User } from "@/services/authService";
+import { authService, User, UserRole } from "@/services/authService";
 
 interface AuthContextType {
   user: User | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (userId: string, role: UserRole) => void;
   logout: () => Promise<void>;
   checkPermission: (permission: string) => Promise<boolean>;
 }
@@ -40,52 +40,50 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     checkAuth();
   }, []);
 
-  const login = async (email: string, password: string) => {
-    setIsLoading(true);
-    try {
-      const { user, token } = await authService.login(email, password);
-      setUser(user);
-      localStorage.setItem("authToken", token);
-      
-      // Rediriger vers la page d'accueil appropriée selon le rôle
-      switch (user.role) {
-        case "administrateur":
-          navigate("/admin");
-          break;
-        case "formateur":
-          navigate("/formateur");
-          break;
-        case "personnel":
-          navigate("/personnel");
-          break;
-        case "hse":
-          navigate("/hse/verification-documents");
-          break;
-        case "sous-traitant":
-          navigate("/personnel/formations");
-          break;
-        case "rh":
-          navigate("/formations");
-          break;
-        default:
-          navigate("/");
-      }
-      
-      toast({
-        title: "Connexion réussie",
-        description: `Bienvenue, ${user.prenom} ${user.nom}`,
-      });
-    } catch (error) {
-      console.error("Erreur de connexion:", error);
-      toast({
-        variant: "destructive",
-        title: "Échec de la connexion",
-        description: "Adresse e-mail ou mot de passe incorrect",
-      });
-      throw error;
-    } finally {
-      setIsLoading(false);
+  const login = (userId: string, role: UserRole) => {
+    // Simuler un utilisateur connecté
+    const newUser: User = {
+      id: parseInt(userId),
+      nom: "Utilisateur",
+      prenom: "Connecté",
+      email: "utilisateur@example.com",
+      role: role,
+      dateCreation: new Date().toISOString(),
+      permissions: [],
+      pin: ""
+    };
+    
+    setUser(newUser);
+    localStorage.setItem("authToken", `simulated_jwt_token_${userId}_${Date.now()}`);
+    
+    // Rediriger vers la page d'accueil appropriée selon le rôle
+    switch (role) {
+      case "administrateur":
+        navigate("/admin");
+        break;
+      case "formateur":
+        navigate("/formateur");
+        break;
+      case "personnel":
+        navigate("/personnel");
+        break;
+      case "hse":
+        navigate("/hse/verification-documents");
+        break;
+      case "sous-traitant":
+        navigate("/personnel/formations");
+        break;
+      case "rh":
+        navigate("/formations");
+        break;
+      default:
+        navigate("/");
     }
+    
+    toast({
+      title: "Connexion réussie",
+      description: `Bienvenue, ${newUser.prenom} ${newUser.nom}`,
+    });
   };
 
   const logout = async () => {
