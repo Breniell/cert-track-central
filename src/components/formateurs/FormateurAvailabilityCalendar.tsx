@@ -54,11 +54,11 @@ export function FormateurAvailabilityCalendar({
         day_today: "bg-primary/5 text-primary font-bold",
       }}
       components={{
-        Day: ({ date, ...props }) => (
+        Day: ({ date, className, ...props }) => (
           <div
             {...props}
             className={cn(
-              props.className,
+              className,
               availableDates[date.toISOString().split("T")[0]] &&
                 "bg-green-50 text-green-800 font-medium"
             )}
