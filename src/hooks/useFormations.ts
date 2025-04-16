@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Formation } from "@/types/Formation";
 import { formationService } from "@/services/formationService";
 
@@ -8,9 +8,29 @@ export const useFormations = () => {
   const [selectedMonth, setSelectedMonth] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('Tous');
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Charger les formations au montage du composant
+  useEffect(() => {
+    const loadFormations = async () => {
+      setIsLoading(true);
+      try {
+        const data = await formationService.getAllFormations();
+        setFormations(data);
+      } catch (error) {
+        console.error("Erreur lors du chargement des formations:", error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    loadFormations();
+  }, []);
 
   const nextId = () => {
-    return Math.max(...formations.map(f => f.id)) + 1;
+    return formations.length > 0 
+      ? Math.max(...formations.map(f => f.id)) + 1 
+      : 1;
   };
 
   const handleNewFormation = (formationData: any) => {
@@ -25,7 +45,8 @@ export const useFormations = () => {
   const filteredFormations = formations.filter(formation => {
     // Filtrage par recherche
     const matchesSearch = formation.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         formation.formateur.toLowerCase().includes(searchTerm.toLowerCase());
+                         formation.formateur.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         formation.lieu.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Filtrage par type
     const matchesType = selectedType === 'Tous' || 
@@ -51,5 +72,6 @@ export const useFormations = () => {
     setSelectedType,
     filteredFormations,
     handleNewFormation,
+    isLoading,
   };
 };
