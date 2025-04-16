@@ -1,139 +1,330 @@
 
 import { useState } from "react";
-import { Link } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useNavigate } from "react-router-dom";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import { z } from "zod";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { Label } from "@/components/ui/label";
-import { Shield, Users, Settings, Book, User, FileCheck } from "lucide-react";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
+import { Lock, Mail, User, Key, Shield, Fingerprint, AlertTriangle } from "lucide-react";
+import { useAuth } from "@/contexts/AuthContext";
+
+// Schéma de validation pour le formulaire de connexion
+const loginSchema = z.object({
+  email: z.string().email("Adresse e-mail invalide"),
+  password: z.string().min(8, "Le mot de passe doit contenir au moins 8 caractères"),
+});
+
+// Schéma de validation pour le formulaire de MFA
+const mfaSchema = z.object({
+  code: z.string().length(6, "Le code doit contenir exactement 6 chiffres"),
+});
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState("");
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const { login } = useAuth();
+  const [isLoading, setIsLoading] = useState(false);
+  const [requireMFA, setRequireMFA] = useState(false);
+  const [userId, setUserId] = useState<string | null>(null);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    setError("");
-    
+  // Formulaire de connexion
+  const loginForm = useForm<z.infer<typeof loginSchema>>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  // Formulaire de MFA
+  const mfaForm = useForm<z.infer<typeof mfaSchema>>({
+    resolver: zodResolver(mfaSchema),
+    defaultValues: {
+      code: "",
+    },
+  });
+
+  // Gestion de la soumission du formulaire de connexion
+  const onLoginSubmit = async (values: z.infer<typeof loginSchema>) => {
+    setIsLoading(true);
     try {
-      await login(email, password);
+      // Simuler l'authentification (à remplacer par un appel API réel)
+      const response = await new Promise<{userId: string, requireMFA: boolean}>((resolve) => {
+        setTimeout(() => {
+          resolve({ userId: "user-123", requireMFA: true });
+        }, 1000);
+      });
+
+      if (response.requireMFA) {
+        setUserId(response.userId);
+        setRequireMFA(true);
+        toast({
+          title: "Vérification en deux étapes requise",
+          description: "Veuillez entrer le code de vérification qui a été envoyé à votre appareil.",
+        });
+      } else {
+        // Connexion réussie sans MFA
+        login(response.userId, "admin");
+        toast({
+          title: "Connexion réussie",
+          description: "Bienvenue sur la plateforme de gestion de formations.",
+        });
+        navigate("/");
+      }
     } catch (error) {
-      console.error("Erreur de connexion:", error);
-      setError("Adresse e-mail ou mot de passe incorrect");
+      toast({
+        variant: "destructive",
+        title: "Erreur de connexion",
+        description: "Identifiants incorrects. Veuillez réessayer.",
+      });
     } finally {
-      setIsSubmitting(false);
+      setIsLoading(false);
     }
   };
 
-  const demoAccounts = [
-    { role: "Admin", icon: Shield, email: "jean.dupont@example.com", password: "password", color: "bg-indigo-100" },
-    { role: "Formateur", icon: Users, email: "pierre.dubois@example.com", password: "password", color: "bg-blue-100" },
-    { role: "RH", icon: Settings, email: "sophie.martin@example.com", password: "password", color: "bg-purple-100" },
-    { role: "Personnel", icon: User, email: "marie.petit@example.com", password: "password", color: "bg-green-100" },
-    { role: "Sous-traitant", icon: Book, email: "thomas.leroy@external.com", password: "password", color: "bg-amber-100" },
-    { role: "HSE", icon: FileCheck, email: "hse@example.com", password: "password", color: "bg-red-100" }
-  ];
+  // Gestion de la soumission du formulaire MFA
+  const onMFASubmit = async (values: z.infer<typeof mfaSchema>) => {
+    setIsLoading(true);
+    try {
+      // Simuler la vérification MFA (à remplacer par un appel API réel)
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, 1000);
+      });
+
+      // MFA vérifié avec succès
+      login(userId!, "admin");
+      toast({
+        title: "Vérification réussie",
+        description: "Bienvenue sur la plateforme de gestion de formations.",
+      });
+      navigate("/");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Code invalide",
+        description: "Le code entré est incorrect. Veuillez réessayer.",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  // Gestion de la connexion SSO
+  const handleSSOLogin = async (provider: string) => {
+    setIsLoading(true);
+    try {
+      // Simuler une connexion SSO (à remplacer par l'intégration réelle)
+      await new Promise<void>((resolve) => {
+        setTimeout(() => {
+          resolve();
+        }, 1500);
+      });
+
+      login("user-sso-123", "admin");
+      toast({
+        title: "Connexion SSO réussie",
+        description: `Connexion réussie via ${provider}.`,
+      });
+      navigate("/");
+    } catch (error) {
+      toast({
+        variant: "destructive",
+        title: "Erreur de connexion SSO",
+        description: `La connexion via ${provider} a échoué. Veuillez réessayer.`,
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-blue-50 to-indigo-100 p-4">
-      <div className="w-full max-w-md relative">
-        <div className="absolute -right-4 -top-4">
-          <Badge variant="success" className="px-3 py-1">Version 2.5</Badge>
-        </div>
-        
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-br from-gray-100 to-gray-200 p-4">
+      <div className="w-full max-w-md">
         <div className="text-center mb-8">
-          <div className="flex justify-center mb-4">
-            <div className="h-16 w-16 rounded-md bg-primary flex items-center justify-center text-white text-2xl font-bold shadow-lg">
-              CTC
-            </div>
-          </div>
-          <h1 className="text-3xl font-bold text-gray-800">CertTrackCentral</h1>
-          <p className="text-gray-600 mt-2">Plateforme de gestion des formations HSE et métiers</p>
-        </div>
-        
-        <Card className="shadow-xl backdrop-blur-sm bg-white/90 border-0">
-          <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl text-center">Connexion</CardTitle>
-            <CardDescription className="text-center">
-              Entrez vos identifiants pour accéder à votre compte
-            </CardDescription>
-          </CardHeader>
-          <form onSubmit={handleSubmit}>
-            <CardContent className="space-y-4">
-              {error && (
-                <Alert variant="destructive">
-                  <AlertDescription>{error}</AlertDescription>
-                </Alert>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="email">Adresse e-mail</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  placeholder="exemple@entreprise.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <Label htmlFor="password">Mot de passe</Label>
-                  <Link to="/forgot-password" className="text-sm text-primary hover:underline">
-                    Mot de passe oublié?
-                  </Link>
-                </div>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  className="h-11"
-                />
-              </div>
-            </CardContent>
-            <CardFooter>
-              <Button className="w-full h-11 text-base shadow-md" type="submit" disabled={isSubmitting}>
-                {isSubmitting ? "Connexion en cours..." : "Se connecter"}
-              </Button>
-            </CardFooter>
-          </form>
-        </Card>
-        
-        <div className="mt-8 text-center text-sm text-gray-600">
-          <p className="mb-3 font-medium">Comptes de démonstration:</p>
-          <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-            {demoAccounts.map((account, index) => (
-              <Button 
-                key={index} 
-                variant="outline" 
-                size="sm"
-                className={`flex items-center justify-center gap-1.5 py-3 h-auto hover:shadow-md transition-all ${account.color}`}
-                onClick={() => {
-                  setEmail(account.email);
-                  setPassword(account.password);
-                }}
-              >
-                <account.icon className="h-4 w-4" />
-                <span>{account.role}</span>
-              </Button>
-            ))}
-          </div>
+          <h1 className="text-3xl font-bold text-gray-800">Plateforme de Gestion des Formations</h1>
+          <p className="text-gray-600 mt-2">Coordination RH, HSE & Formations Métiers</p>
         </div>
 
-        <div className="mt-8 text-center text-xs text-gray-500">
-          <p>© 2025 CertTrackCentral. Tous droits réservés.</p>
-          <p className="mt-1">Version 2.5.0 - Mis à jour le 15/04/2025</p>
-        </div>
+        {requireMFA ? (
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Shield className="mr-2 h-5 w-5 text-primary" />
+                Vérification en deux étapes
+              </CardTitle>
+              <CardDescription>
+                Veuillez entrer le code de vérification envoyé à votre appareil
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...mfaForm}>
+                <form onSubmit={mfaForm.handleSubmit(onMFASubmit)} className="space-y-4">
+                  <FormField
+                    control={mfaForm.control}
+                    name="code"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Code de vérification</FormLabel>
+                        <FormControl>
+                          <div className="relative">
+                            <Key className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                            <Input
+                              {...field}
+                              className="pl-10"
+                              placeholder="Entrez le code à 6 chiffres"
+                              inputMode="numeric"
+                              maxLength={6}
+                            />
+                          </div>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" disabled={isLoading}>
+                    {isLoading ? "Vérification..." : "Vérifier"}
+                  </Button>
+                </form>
+              </Form>
+              <div className="mt-4 text-center">
+                <Button variant="link" onClick={() => setRequireMFA(false)} disabled={isLoading}>
+                  Retour à la connexion
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle>Connexion</CardTitle>
+              <CardDescription>
+                Accédez à la plateforme de gestion des formations
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="credentials" className="w-full">
+                <TabsList className="grid w-full grid-cols-2">
+                  <TabsTrigger value="credentials">Identifiants</TabsTrigger>
+                  <TabsTrigger value="sso">SSO</TabsTrigger>
+                </TabsList>
+                <TabsContent value="credentials">
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                      <FormField
+                        control={loginForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>E-mail</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Mail className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                                <Input {...field} className="pl-10" placeholder="nom@entreprise.com" />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Mot de passe</FormLabel>
+                            <FormControl>
+                              <div className="relative">
+                                <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-gray-500" />
+                                <Input
+                                  {...field}
+                                  type="password"
+                                  className="pl-10"
+                                  placeholder="Votre mot de passe"
+                                />
+                              </div>
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button type="submit" className="w-full" disabled={isLoading}>
+                        {isLoading ? "Connexion en cours..." : "Se connecter"}
+                      </Button>
+                    </form>
+                  </Form>
+                  <div className="mt-4 text-center">
+                    <Button variant="link" className="px-2">
+                      Mot de passe oublié ?
+                    </Button>
+                  </div>
+                </TabsContent>
+                <TabsContent value="sso">
+                  <div className="space-y-4 py-2">
+                    <div className="flex flex-col space-y-2">
+                      <Button
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => handleSSOLogin("Microsoft")}
+                        disabled={isLoading}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Se connecter avec Microsoft
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="justify-start"
+                        onClick={() => handleSSOLogin("Google")}
+                        disabled={isLoading}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Se connecter avec Google
+                      </Button>
+                    </div>
+                    <div className="relative my-4">
+                      <div className="absolute inset-0 flex items-center">
+                        <span className="w-full border-t border-gray-300" />
+                      </div>
+                      <div className="relative flex justify-center text-xs uppercase">
+                        <span className="bg-white px-2 text-gray-500">Ou</span>
+                      </div>
+                    </div>
+                    <Button
+                      variant="outline" 
+                      className="w-full justify-start"
+                      onClick={() => handleSSOLogin("Biométrique")}
+                      disabled={isLoading}
+                    >
+                      <Fingerprint className="mr-2 h-4 w-4" />
+                      Authentification biométrique
+                    </Button>
+                  </div>
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+            <CardFooter className="flex flex-col space-y-4">
+              <div className="w-full rounded-md bg-amber-50 p-3">
+                <div className="flex">
+                  <AlertTriangle className="h-5 w-5 text-amber-500" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-amber-800">Information de sécurité</h3>
+                    <div className="mt-2 text-sm text-amber-700">
+                      <p>
+                        Pour des raisons de sécurité, l'authentification à deux facteurs est activée pour les comptes administratifs et HSE.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </CardFooter>
+          </Card>
+        )}
       </div>
     </div>
   );
