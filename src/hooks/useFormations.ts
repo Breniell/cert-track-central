@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { Formation } from "@/types/Formation";
 import { formationService } from "@/services/formationService";
+import { DateRange } from "react-day-picker";
+import { isWithinInterval, parseISO } from "date-fns";
 
 export const useFormations = () => {
   const [formations, setFormations] = useState<Formation[]>([]);
@@ -9,6 +11,7 @@ export const useFormations = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedType, setSelectedType] = useState('Tous');
   const [isLoading, setIsLoading] = useState(true);
+  const [dateRange, setDateRange] = useState<DateRange | null>(null);
 
   // Charger les formations au montage du composant
   useEffect(() => {
@@ -42,6 +45,15 @@ export const useFormations = () => {
     setFormations([...formations, newFormation]);
   };
 
+  const isWithinDateRange = (date: string) => {
+    if (!dateRange?.from) return true;
+    const formationDate = parseISO(date);
+    
+    return dateRange.to 
+      ? isWithinInterval(formationDate, { start: dateRange.from, end: dateRange.to })
+      : formationDate >= dateRange.from;
+  };
+
   const filteredFormations = formations.filter(formation => {
     // Filtrage par recherche
     const matchesSearch = formation.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -53,12 +65,10 @@ export const useFormations = () => {
                         formation.type === selectedType || 
                         (selectedType === 'Urgente' && formation.estUrgente);
     
-    // Filtrage par mois
-    const formationDate = new Date(formation.date);
-    const matchesMonth = formationDate.getMonth() === selectedMonth.getMonth() && 
-                         formationDate.getFullYear() === selectedMonth.getFullYear();
+    // Filtrage par date
+    const matchesDateRange = isWithinDateRange(formation.date);
     
-    return matchesSearch && matchesType && matchesMonth;
+    return matchesSearch && matchesType && matchesDateRange;
   });
 
   return {
@@ -73,5 +83,7 @@ export const useFormations = () => {
     filteredFormations,
     handleNewFormation,
     isLoading,
+    dateRange,
+    setDateRange
   };
 };

@@ -12,8 +12,9 @@ import { Plus, Download, Calendar } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
 import { DatePickerWithRange } from "@/components/ui/date-range-picker";
-import { addMonths, format } from "date-fns";
+import { addMonths } from "date-fns";
 import { DateRange } from "react-day-picker";
+import { Formation } from "@/types/Formation";
 
 export default function Planning() {
   const navigate = useNavigate();
@@ -25,24 +26,39 @@ export default function Planning() {
     setSelectedType,
     filteredFormations,
     handleNewFormation,
-    selectedMonth,
-    setSelectedMonth,
+    dateRange,
+    setDateRange,
   } = useFormations();
   
   const [isNewFormationDialogOpen, setIsNewFormationDialogOpen] = useState(false);
   const [isDetailsDialogOpen, setIsDetailsDialogOpen] = useState(false);
-  const [selectedFormation, setSelectedFormation] = useState(null);
-  
-  // État pour le filtre de date
-  const [dateRange, setDateRange] = useState<DateRange>({
-    from: new Date(),
-    to: addMonths(new Date(), 1)
-  });
+  const [selectedFormation, setSelectedFormation] = useState<Formation | null>(null);
 
   const handleExportPlanning = () => {
+    // Exemple de logique d'exportation
+    const formationsData = filteredFormations.map(f => ({
+      titre: f.titre,
+      date: f.date,
+      formateur: f.formateur,
+      lieu: f.lieu,
+      type: f.type,
+      participants: `${f.participants}/${f.maxParticipants}`
+    }));
+
+    // Créer un objet Blob avec les données
+    const blob = new Blob([JSON.stringify(formationsData, null, 2)], { type: 'application/json' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `planning_formations_${new Date().toISOString().split('T')[0]}.json`;
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(a);
+
     toast({
-      title: "Export en cours",
-      description: "Le planning est en cours d'exportation..."
+      title: "Export réussi",
+      description: "Le planning a été exporté avec succès"
     });
   };
 
@@ -55,10 +71,13 @@ export default function Planning() {
   };
   
   const handleEditFormation = (id: number) => {
-    toast({
-      title: "Modification de formation",
-      description: "Fonctionnalité de modification en cours de développement."
-    });
+    const formation = formations.find(f => f.id === id);
+    if (formation) {
+      toast({
+        title: "Modification de formation",
+        description: `Modification de la formation "${formation.titre}" en cours...`
+      });
+    }
   };
   
   const handleViewCalendar = () => {
@@ -81,7 +100,7 @@ export default function Planning() {
               <div>
                 <CardTitle className="text-2xl font-bold text-gray-800">Planning des Formations</CardTitle>
                 <p className="text-gray-500 mt-1">
-                  {formations.length} formations planifiées
+                  {filteredFormations.length} formations planifiées
                 </p>
               </div>
               <div className="flex flex-wrap gap-3">
@@ -105,7 +124,7 @@ export default function Planning() {
             <div className="mb-6">
               <h3 className="text-sm font-medium mb-2">Période</h3>
               <DatePickerWithRange 
-                date={dateRange} 
+                date={dateRange || { from: new Date(), to: addMonths(new Date(), 1) }}
                 onDateChange={handleDateRangeChange}
               />
             </div>
@@ -118,7 +137,7 @@ export default function Planning() {
             />
 
             <FormationsList 
-              formations={filteredFormations} 
+              formations={filteredFormations}
               onViewDetails={handleViewDetails}
               onEdit={handleEditFormation}
             />
