@@ -1,10 +1,29 @@
 
 import Layout from "@/components/layout/Layout";
-import FormationPlanning from "@/components/formations/FormationPlanning";
+import { CentralizedCalendar } from "@/components/planning/CentralizedCalendar";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "lucide-react";
+import { Calendar, Plus } from "lucide-react";
+import { useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { NewFormationDialog } from "@/components/planning/NewFormationDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 const PlanningGeneral = () => {
+  const [isNewFormationDialogOpen, setIsNewFormationDialogOpen] = useState(false);
+  const navigate = useNavigate();
+  const { user } = useAuth();
+  
+  const canCreateFormation = user?.role === 'administrateur' || 
+                            user?.role === 'rh' || 
+                            user?.role === 'formateur' || 
+                            user?.role === 'hse';
+
+  const handleFormationSelect = (formation) => {
+    console.log("Formation sélectionnée:", formation);
+    // Naviguer vers la page de détails de la formation si nécessaire
+    // navigate(`/formations/${formation.id}`);
+  };
+
   return (
     <Layout>
       <div className="p-6">
@@ -18,9 +37,25 @@ const PlanningGeneral = () => {
               Vue d'ensemble des formations planifiées
             </p>
           </div>
-          <Button>Nouvelle formation</Button>
+          {canCreateFormation && (
+            <Button onClick={() => setIsNewFormationDialogOpen(true)}>
+              <Plus className="h-4 w-4 mr-2" />
+              Nouvelle formation
+            </Button>
+          )}
         </div>
-        <FormationPlanning />
+        
+        <CentralizedCalendar 
+          onEventSelect={handleFormationSelect}
+          onNewEvent={canCreateFormation ? () => setIsNewFormationDialogOpen(true) : undefined}
+        />
+        
+        {isNewFormationDialogOpen && (
+          <NewFormationDialog 
+            open={isNewFormationDialogOpen}
+            onOpenChange={setIsNewFormationDialogOpen}
+          />
+        )}
       </div>
     </Layout>
   );

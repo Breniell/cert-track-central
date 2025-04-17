@@ -26,11 +26,13 @@ import FormateurDashboard from "./pages/formateur/Dashboard";
 import FormateurFormations from "./pages/formateur/Formations";
 import FormateurPlanning from "./pages/formateur/Planning";
 import GestionPointage from "./pages/formateur/GestionPointage";
+import FormateurEvaluations from "./pages/formateur/FormateurEvaluations";
 
 // Nouvelles pages pour le personnel
 import PersonnelDashboard from "./pages/personnel/Dashboard";
 import PersonnelFormations from "./pages/personnel/Formations";
 import PersonnelHistorique from "./pages/personnel/Historique";
+import PersonnelDocuments from "./pages/personnel/Documents";
 
 // Nouvelles pages HSE
 import VerificationDocuments from "./pages/hse/VerificationDocuments";
@@ -106,6 +108,7 @@ const AppRoutes = () => {
         <Route path="formations" element={<ProtectedRoute element={<FormateurFormations />} requiredRole={['formateur']} />} />
         <Route path="planning" element={<ProtectedRoute element={<FormateurPlanning />} requiredRole={['formateur']} />} />
         <Route path="pointage" element={<ProtectedRoute element={<GestionPointage />} requiredRole={['formateur']} />} />
+        <Route path="evaluations" element={<ProtectedRoute element={<FormateurEvaluations />} requiredRole={['formateur']} />} />
       </Route>
 
       {/* Routes personnel et sous-traitant */}
@@ -113,6 +116,7 @@ const AppRoutes = () => {
         <Route index element={<ProtectedRoute element={<PersonnelDashboard />} requiredRole={['personnel', 'sous-traitant']} />} />
         <Route path="formations" element={<ProtectedRoute element={<PersonnelFormations />} requiredRole={['personnel', 'sous-traitant']} />} />
         <Route path="historique" element={<ProtectedRoute element={<PersonnelHistorique />} requiredRole={['personnel']} />} />
+        <Route path="documents" element={<ProtectedRoute element={<PersonnelDocuments />} requiredRole={['personnel', 'sous-traitant']} />} />
       </Route>
 
       {/* Routes HSE */}

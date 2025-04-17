@@ -1,197 +1,201 @@
 
-import { useState } from "react";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
+import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { CalendarIcon } from "lucide-react";
 import { format } from "date-fns";
+import { fr } from "date-fns/locale";
+import { useToast } from "@/hooks/use-toast";
 
 interface NewFormationDialogProps {
-  isOpen: boolean;
-  onClose: () => void;
-  onSave: (formationData: any) => void;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
 }
 
-export default function NewFormationDialog({ isOpen, onClose, onSave }: NewFormationDialogProps) {
-  const [titre, setTitre] = useState("");
-  const [type, setType] = useState<"HSE" | "Métier">("HSE");
+export function NewFormationDialog({ open, onOpenChange }: NewFormationDialogProps) {
   const [date, setDate] = useState<Date | undefined>(new Date());
-  const [duree, setDuree] = useState("8h");
-  const [lieu, setLieu] = useState("");
-  const [maxParticipants, setMaxParticipants] = useState(10);
-  const [formateur, setFormateur] = useState("");
-  const [estUrgente, setEstUrgente] = useState(false);
-  const [documentsRequis, setDocumentsRequis] = useState(false);
+  const [type, setType] = useState<string>("HSE");
+  const [titre, setTitre] = useState<string>("");
+  const [lieu, setLieu] = useState<string>("");
+  const [formateur, setFormateur] = useState<string>("");
+  const [maxParticipants, setMaxParticipants] = useState<string>("10");
+  const [duree, setDuree] = useState<string>("8h");
+  const [description, setDescription] = useState<string>("");
+  const [estUrgente, setEstUrgente] = useState<boolean>(false);
   
-  const handleSave = () => {
-    const newFormation = {
-      titre,
-      type,
-      date: date ? date.toISOString().split('T')[0] : new Date().toISOString().split('T')[0],
-      duree,
-      lieu,
-      maxParticipants,
-      formateur,
-      participants: 0,
-      statut: "À venir",
-      estUrgente,
-      documentationRequise: documentsRequis,
-      documentsValides: false
-    };
+  const { toast } = useToast();
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
     
-    onSave(newFormation);
+    // Ici, on simule l'ajout d'une formation
+    toast({
+      title: "Formation créée",
+      description: `La formation "${titre}" a été ajoutée au planning.`,
+    });
+    
+    // Réinitialiser le formulaire et fermer le dialogue
     resetForm();
-    onClose();
+    onOpenChange(false);
   };
-  
+
   const resetForm = () => {
-    setTitre("");
-    setType("HSE");
     setDate(new Date());
-    setDuree("8h");
+    setType("HSE");
+    setTitre("");
     setLieu("");
-    setMaxParticipants(10);
     setFormateur("");
+    setMaxParticipants("10");
+    setDuree("8h");
+    setDescription("");
     setEstUrgente(false);
-    setDocumentsRequis(false);
   };
 
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px]">
-        <DialogHeader>
-          <DialogTitle>Ajouter une nouvelle formation</DialogTitle>
-        </DialogHeader>
-        
-        <div className="grid gap-4 py-4">
-          <div className="grid grid-cols-1 gap-3">
-            <Label htmlFor="titre">Titre de la formation</Label>
-            <Input 
-              id="titre" 
-              value={titre} 
-              onChange={(e) => setTitre(e.target.value)} 
-              placeholder="Saisir le titre de la formation"
-            />
-          </div>
+        <form onSubmit={handleSubmit}>
+          <DialogHeader>
+            <DialogTitle>Nouvelle formation</DialogTitle>
+            <DialogDescription>
+              Créez une nouvelle session de formation en remplissant les informations ci-dessous.
+            </DialogDescription>
+          </DialogHeader>
           
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="type">Type de formation</Label>
-              <Select value={type} onValueChange={(value: "HSE" | "Métier") => setType(value)}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Sélectionnez le type" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="HSE">HSE</SelectItem>
-                  <SelectItem value="Métier">Métier</SelectItem>
-                </SelectContent>
-              </Select>
+          <div className="grid gap-4 py-4">
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="type">Type de formation</Label>
+                <Select value={type} onValueChange={setType}>
+                  <SelectTrigger id="type">
+                    <SelectValue placeholder="Sélectionner un type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="HSE">HSE</SelectItem>
+                    <SelectItem value="Métier">Métier</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="date">Date</Label>
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-start text-left font-normal"
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {date ? format(date, "PPP", { locale: fr }) : "Sélectionner une date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0">
+                    <Calendar
+                      mode="single"
+                      selected={date}
+                      onSelect={setDate}
+                      locale={fr}
+                    />
+                  </PopoverContent>
+                </Popover>
+              </div>
             </div>
             
             <div className="space-y-2">
-              <Label>Date de la formation</Label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button variant="outline" className="w-full justify-start text-left">
-                    {date ? format(date, 'dd/MM/yyyy') : "Sélectionnez une date"}
-                    <CalendarIcon className="ml-auto h-4 w-4 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
-                  <Calendar
-                    mode="single"
-                    selected={date}
-                    onSelect={setDate}
-                    initialFocus
-                    className="p-3 pointer-events-auto"
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="duree">Durée</Label>
-              <Select value={duree} onValueChange={setDuree}>
-                <SelectTrigger>
-                  <SelectValue placeholder="Durée" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="4h">4 heures</SelectItem>
-                  <SelectItem value="8h">8 heures</SelectItem>
-                  <SelectItem value="16h">16 heures</SelectItem>
-                  <SelectItem value="24h">24 heures</SelectItem>
-                  <SelectItem value="32h">32 heures</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-            
-            <div className="space-y-2">
-              <Label htmlFor="lieu">Lieu</Label>
-              <Input 
-                id="lieu" 
-                value={lieu} 
-                onChange={(e) => setLieu(e.target.value)} 
-                placeholder="Saisir le lieu"
-              />
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="formateur">Formateur</Label>
-              <Input 
-                id="formateur" 
-                value={formateur} 
-                onChange={(e) => setFormateur(e.target.value)} 
-                placeholder="Nom du formateur"
+              <Label htmlFor="titre">Titre de la formation</Label>
+              <Input
+                id="titre"
+                value={titre}
+                onChange={(e) => setTitre(e.target.value)}
+                placeholder="Ex: Sécurité en hauteur"
+                required
               />
             </div>
             
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="lieu">Lieu</Label>
+                <Input
+                  id="lieu"
+                  value={lieu}
+                  onChange={(e) => setLieu(e.target.value)}
+                  placeholder="Ex: Salle 102"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="formateur">Formateur</Label>
+                <Input
+                  id="formateur"
+                  value={formateur}
+                  onChange={(e) => setFormateur(e.target.value)}
+                  placeholder="Ex: Jean Dupont"
+                  required
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="maxParticipants">Nombre maximum de participants</Label>
+                <Input
+                  id="maxParticipants"
+                  type="number"
+                  value={maxParticipants}
+                  onChange={(e) => setMaxParticipants(e.target.value)}
+                  min="1"
+                  required
+                />
+              </div>
+              
+              <div className="space-y-2">
+                <Label htmlFor="duree">Durée</Label>
+                <Input
+                  id="duree"
+                  value={duree}
+                  onChange={(e) => setDuree(e.target.value)}
+                  placeholder="Ex: 8h"
+                  required
+                />
+              </div>
+            </div>
+            
             <div className="space-y-2">
-              <Label htmlFor="maxParticipants">Nombre max. de participants</Label>
-              <Input 
-                id="maxParticipants" 
-                type="number" 
-                value={maxParticipants.toString()} 
-                onChange={(e) => setMaxParticipants(Number(e.target.value))} 
-                min={1} 
-                max={50}
+              <Label htmlFor="description">Description</Label>
+              <Textarea
+                id="description"
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Détails de la formation..."
+                className="min-h-[100px]"
               />
             </div>
-          </div>
-          
-          <div className="grid grid-cols-2 gap-4 mt-2">
+            
             <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="estUrgente" 
-                checked={estUrgente} 
-                onCheckedChange={(checked) => setEstUrgente(checked as boolean)} 
+              <Switch
+                id="urgente"
+                checked={estUrgente}
+                onCheckedChange={setEstUrgente}
               />
-              <Label htmlFor="estUrgente" className="text-sm">Formation urgente</Label>
-            </div>
-            
-            <div className="flex items-center space-x-2">
-              <Checkbox 
-                id="documentsRequis" 
-                checked={documentsRequis} 
-                onCheckedChange={(checked) => setDocumentsRequis(checked as boolean)} 
-              />
-              <Label htmlFor="documentsRequis" className="text-sm">Documents requis</Label>
+              <Label htmlFor="urgente">Formation urgente</Label>
             </div>
           </div>
-        </div>
-        
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>Annuler</Button>
-          <Button onClick={handleSave} disabled={!titre || !lieu || !formateur}>Enregistrer</Button>
-        </DialogFooter>
+          
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>
+              Annuler
+            </Button>
+            <Button type="submit">Créer la formation</Button>
+          </DialogFooter>
+        </form>
       </DialogContent>
     </Dialog>
   );
