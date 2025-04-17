@@ -1,5 +1,7 @@
 
 import React from 'react';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowLeft, ArrowRight, Filter, Plus } from "lucide-react";

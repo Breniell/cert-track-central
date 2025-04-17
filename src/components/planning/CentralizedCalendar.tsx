@@ -1,8 +1,8 @@
+
 import React, { useState, useEffect } from "react";
 import { Calendar, momentLocalizer } from "react-big-calendar";
 import moment from "moment";
-import { fr } from "date-fns/locale";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { Formation, FormationType } from "@/types/Formation";
 import { CalendarIcon } from "lucide-react";
@@ -64,7 +64,12 @@ export function CentralizedCalendar({ onEventSelect, onNewEvent }: CentralizedCa
   const [isFilterDialogOpen, setIsFilterDialogOpen] = useState(false);
   const [selectedEvent, setSelectedEvent] = useState<Formation | null>(null);
   const [isEventDetailsOpen, setIsEventDetailsOpen] = useState(false);
-  const [filters, setFilters] = useState({
+  const [filters, setFilters] = useState<{
+    types: FormationType[];
+    formateurs: string[];
+    lieux: string[];
+    urgence: boolean;
+  }>({
     types: ["HSE", "Métier"],
     formateurs: [],
     lieux: [],
