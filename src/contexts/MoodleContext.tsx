@@ -1,48 +1,52 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
-import { moodleApi, MoodleUser } from '@/services/moodleApi';
+import React, { createContext, useContext } from 'react';
+import { useCurrentUser } from '../hooks/useMoodle';
+
+interface MoodleUser {
+  id: string;
+  username: string;
+  firstname: string;
+  lastname: string;
+  email: string;
+  roles: string[];
+  capabilities: string[];
+}
 
 interface MoodleContextType {
   user: MoodleUser | null;
   isLoading: boolean;
-  hasCapability: (capability: string) => boolean;
   isTrainer: boolean;
-  isRH: boolean;
   isLearner: boolean;
+  isRH: boolean;
 }
 
 const MoodleContext = createContext<MoodleContextType | undefined>(undefined);
 
 export const MoodleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [user, setUser] = useState<MoodleUser | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { data: user, isLoading } = useCurrentUser();
 
-  useEffect(() => {
-    // Récupérer l'utilisateur depuis Moodle
-    const moodleUser = moodleApi.getCurrentUser();
-    setUser(moodleUser);
-    setIsLoading(false);
-  }, []);
+  const isTrainer = user?.roles?.includes('trainer') || false;
+  const isLearner = user?.roles?.includes('student') || false;
+  const isRH = user?.roles?.includes('manager') || user?.roles?.includes('hr') || false;
 
-  const hasCapability = (capability: string): boolean => {
-    return moodleApi.hasCapability(capability);
+  const value = {
+    user: user ? {
+      id: user.id,
+      username: user.name,
+      firstname: user.name.split(' ')[0] || '',
+      lastname: user.name.split(' ')[1] || '',
+      email: user.email,
+      roles: [user.role],
+      capabilities: []
+    } : null,
+    isLoading,
+    isTrainer,
+    isLearner,
+    isRH
   };
 
-  const isTrainer = user?.roles?.includes('trainer') || hasCapability('local/cimencamplus:manage_formations');
-  const isRH = user?.roles?.includes('manager') || hasCapability('local/cimencamplus:view_all_formations');
-  const isLearner = user?.roles?.includes('student') || hasCapability('local/cimencamplus:enroll_formations');
-
   return (
-    <MoodleContext.Provider
-      value={{
-        user,
-        isLoading,
-        hasCapability,
-        isTrainer,
-        isRH,
-        isLearner,
-      }}
-    >
+    <MoodleContext.Provider value={value}>
       {children}
     </MoodleContext.Provider>
   );

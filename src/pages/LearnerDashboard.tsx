@@ -1,268 +1,210 @@
 
-import { useState } from "react";
-import { useQuery } from "@tanstack/react-query";
-import Layout from "@/components/layout/Layout";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
-import { Search, Calendar, Clock, MapPin, User, Bell, BellOff } from "lucide-react";
-import { Formation } from "@/types/Formation";
-import { formationService } from "@/services/formationService";
-import FormationCard from "@/components/formations/FormationCard";
-import FormationDetails from "@/components/formations/FormationDetails";
-import { toast } from "@/hooks/use-toast";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import React, { useState } from 'react';
+import { CalendarDays, BookOpen, AlertCircle } from 'lucide-react';
+import { useFormations, useCurrentUser } from '../hooks/useMoodle';
+import { Formation } from '../types';
 
-export default function LearnerDashboard() {
-  const [searchTerm, setSearchTerm] = useState("");
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [selectedFormation, setSelectedFormation] = useState<Formation | null>(null);
-  const [alertsEnabled, setAlertsEnabled] = useState(true);
-
-  // En production, l'ID utilisateur viendra de Moodle
-  const userId = "apprenant_moodle_id";
-
-  const { data: allFormations, isLoading } = useQuery({
-    queryKey: ["formations"],
-    queryFn: () => formationService.getAllFormations()
-  });
-
-  // Simuler les inscriptions de l'utilisateur
-  const myFormations = allFormations?.filter(f => 
-    // En production, vérifier via API Moodle si l'utilisateur est inscrit
-    Math.random() > 0.7 // Simulation
+const LearnerDashboard: React.FC = () => {
+  const { data: formations = [], isLoading } = useFormations();
+  const { data: currentUser } = useCurrentUser();
+  const [activeTab, setActiveTab] = useState<'registered' | 'available'>('registered');
+  
+  // Find formations where the current user is a participant
+  const registeredFormations = formations.filter(
+    formation => formation.participants.includes(currentUser?.id || '')
+  );
+  
+  // Find available formations where the user is not registered yet
+  const availableFormations = formations.filter(
+    formation => 
+      !formation.participants.includes(currentUser?.id || '') && 
+      formation.status === 'upcoming' &&
+      formation.participants.length < formation.maxParticipants
   );
 
-  const availableFormations = allFormations?.filter(f => 
-    f.statut === 'À venir' && 
-    f.participants < f.maxParticipants &&
-    !myFormations?.some(mf => mf.id === f.id)
-  );
+  const upcomingSessions = registeredFormations.filter(f => f.status === 'upcoming')
+    .sort((a, b) => new Date(a.startDate).getTime() - new Date(b.startDate).getTime());
+  
+  const nextSession = upcomingSessions[0];
 
-  const filteredAvailable = availableFormations?.filter(formation =>
-    formation.titre.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
-  const upcomingSessions = myFormations?.filter(f => 
-    f.statut === 'À venir' || f.statut === 'En cours'
-  ).sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
-
-  const handleViewDetails = (id: number) => {
-    const formation = allFormations?.find(f => f.id === id);
-    if (formation) {
-      setSelectedFormation(formation);
-      setIsDetailsOpen(true);
-    }
-  };
-
-  const handleRegister = (formationId: number) => {
-    // En production, appeler l'API Moodle pour l'inscription
-    toast({
-      title: "Inscription réussie",
-      description: "Vous êtes maintenant inscrit à cette formation"
-    });
-  };
-
-  const toggleAlerts = () => {
-    setAlertsEnabled(!alertsEnabled);
-    toast({
-      title: alertsEnabled ? "Alertes désactivées" : "Alertes activées",
-      description: alertsEnabled 
-        ? "Vous ne recevrez plus d'alertes pour les sessions à venir"
-        : "Vous recevrez des alertes avant vos sessions"
-    });
-  };
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-gray-600">Chargement...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
-    <Layout>
-      <div className="space-y-6">
-        {/* En-tête */}
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <div>
-            <h1 className="text-3xl font-bold text-cimencam-gray">Mon Espace Formation</h1>
-            <p className="text-gray-600 mt-1">
-              Suivez vos formations et découvrez de nouvelles opportunités
-            </p>
-          </div>
-          <Button
-            variant="outline"
-            onClick={toggleAlerts}
-            className={`${alertsEnabled ? 'text-cimencam-green border-cimencam-green' : 'text-gray-400'}`}
-          >
-            {alertsEnabled ? <Bell className="w-4 h-4 mr-2" /> : <BellOff className="w-4 h-4 mr-2" />}
-            {alertsEnabled ? 'Alertes activées' : 'Alertes désactivées'}
-          </Button>
-        </div>
+    <div className="min-h-screen bg-gray-50 p-6">
+      <div className="max-w-7xl mx-auto space-y-6">
+        <header>
+          <h1 className="text-2xl font-bold text-gray-900">Tableau de Bord Apprenant</h1>
+        </header>
 
-        {/* Prochaines sessions */}
-        {upcomingSessions && upcomingSessions.length > 0 && (
-          <Card className="border-cimencam-green">
-            <CardHeader>
-              <CardTitle className="text-cimencam-green flex items-center">
-                <Calendar className="w-5 h-5 mr-2" />
-                Mes prochaines sessions
-              </CardTitle>
-              <CardDescription>
-                Sessions auxquelles vous êtes inscrit
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-3">
-                {upcomingSessions.slice(0, 3).map(formation => (
-                  <div key={formation.id} className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex-1">
-                      <h4 className="font-medium text-cimencam-gray">{formation.titre}</h4>
-                      <div className="flex items-center gap-4 text-sm text-gray-600 mt-1">
-                        <span className="flex items-center">
-                          <Calendar className="w-4 h-4 mr-1" />
-                          {new Date(formation.date).toLocaleDateString('fr-FR')}
-                        </span>
-                        <span className="flex items-center">
-                          <Clock className="w-4 h-4 mr-1" />
-                          {formation.duree}
-                        </span>
-                        <span className="flex items-center">
-                          <MapPin className="w-4 h-4 mr-1" />
-                          {formation.lieu}
-                        </span>
-                        <span className="flex items-center">
-                          <User className="w-4 h-4 mr-1" />
-                          {formation.formateur}
-                        </span>
-                      </div>
+        {nextSession && (
+          <div className="bg-white rounded-lg shadow-sm p-5 border-l-4 border-blue-600">
+            <div className="flex items-start justify-between">
+              <div className="flex items-start space-x-3">
+                <AlertCircle className="text-blue-600 mt-1" size={20} />
+                <div>
+                  <h3 className="font-semibold text-gray-900">Prochaine session</h3>
+                  <p className="text-lg font-medium text-gray-900 mt-1">{nextSession.title}</p>
+                  <div className="flex items-center space-x-4 mt-2">
+                    <div className="flex items-center text-gray-600">
+                      <CalendarDays size={16} className="mr-1" />
+                      <span>{new Date(nextSession.startDate).toLocaleDateString('fr-FR')}</span>
                     </div>
-                    <Badge variant="outline" className="text-cimencam-green border-cimencam-green">
-                      {formation.statut}
-                    </Badge>
+                    <div className="text-gray-600">
+                      <span>Formateur: {nextSession.trainerName}</span>
+                    </div>
                   </div>
-                ))}
-                {upcomingSessions.length > 3 && (
-                  <p className="text-center text-sm text-gray-500">
-                    Et {upcomingSessions.length - 3} autres sessions...
-                  </p>
+                </div>
+              </div>
+              
+              <div>
+                {nextSession.modality === 'online' && (
+                  <button className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm">
+                    Lien de connexion
+                  </button>
                 )}
               </div>
-            </CardContent>
-          </Card>
+            </div>
+          </div>
         )}
-
-        {/* Statistiques */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg text-cimencam-gray">Mes inscriptions</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-cimencam-green">
-                {myFormations?.length || 0}
+        
+        <div className="bg-white rounded-lg shadow-sm overflow-hidden">
+          <div className="flex border-b border-gray-200">
+            <button
+              className={`px-6 py-3 text-sm font-medium ${
+                activeTab === 'registered'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+              onClick={() => setActiveTab('registered')}
+            >
+              <div className="flex items-center gap-2">
+                <BookOpen size={18} />
+                <span>Mes formations</span>
+                <span className="ml-1 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                  {registeredFormations.length}
+                </span>
               </div>
-              <p className="text-sm text-gray-600">Formations actives</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg text-cimencam-gray">Formations terminées</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-cimencam-green">
-                {myFormations?.filter(f => f.statut === 'Terminée').length || 0}
+            </button>
+            <button
+              className={`px-6 py-3 text-sm font-medium ${
+                activeTab === 'available'
+                  ? 'text-blue-600 border-b-2 border-blue-600'
+                  : 'text-gray-500 hover:text-blue-600 hover:bg-gray-50'
+              }`}
+              onClick={() => setActiveTab('available')}
+            >
+              <div className="flex items-center gap-2">
+                <CalendarDays size={18} />
+                <span>Formations disponibles</span>
+                <span className="ml-1 bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full text-xs">
+                  {availableFormations.length}
+                </span>
               </div>
-              <p className="text-sm text-gray-600">Avec certificat</p>
-            </CardContent>
-          </Card>
+            </button>
+          </div>
 
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="text-lg text-cimencam-gray">Formations disponibles</CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="text-3xl font-bold text-cimencam-green">
-                {availableFormations?.length || 0}
-              </div>
-              <p className="text-sm text-gray-600">Places libres</p>
-            </CardContent>
-          </Card>
+          <div className="p-6">
+            {activeTab === 'registered' && (
+              <>
+                {registeredFormations.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {registeredFormations.map(formation => (
+                      <div key={formation.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{formation.title}</h3>
+                            <p className="text-sm text-gray-600 mt-1">{formation.description}</p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <CalendarDays className="w-4 h-4 mr-2" />
+                              {new Date(formation.startDate).toLocaleDateString('fr-FR')}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <strong>Lieu:</strong> {formation.location}
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t border-gray-100">
+                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                              formation.status === 'upcoming' 
+                                ? 'bg-blue-100 text-blue-700'
+                                : 'bg-gray-100 text-gray-700'
+                            }`}>
+                              {formation.status === 'upcoming' ? 'À venir' : formation.status}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500 mb-4">Vous n'êtes inscrit(e) à aucune formation.</p>
+                    <button 
+                      className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors"
+                      onClick={() => setActiveTab('available')}
+                    >
+                      Voir les formations disponibles
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
+
+            {activeTab === 'available' && (
+              <>
+                {availableFormations.length > 0 ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {availableFormations.map(formation => (
+                      <div key={formation.id} className="bg-white border border-gray-200 rounded-lg p-6">
+                        <div className="space-y-4">
+                          <div>
+                            <h3 className="text-lg font-semibold text-gray-900">{formation.title}</h3>
+                            <p className="text-sm text-gray-600 mt-1">{formation.description}</p>
+                          </div>
+                          
+                          <div className="space-y-2">
+                            <div className="flex items-center text-sm text-gray-600">
+                              <CalendarDays className="w-4 h-4 mr-2" />
+                              {new Date(formation.startDate).toLocaleDateString('fr-FR')}
+                            </div>
+                            <div className="text-sm text-gray-600">
+                              <strong>Lieu:</strong> {formation.location}
+                            </div>
+                          </div>
+
+                          <div className="pt-4 border-t border-gray-100">
+                            <button className="px-3 py-1.5 bg-blue-600 hover:bg-blue-700 text-white rounded-md transition-colors text-sm">
+                              S'inscrire
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="text-center py-12">
+                    <p className="text-gray-500">Aucune formation disponible pour le moment.</p>
+                  </div>
+                )}
+              </>
+            )}
+          </div>
         </div>
-
-        {/* Recherche */}
-        <div className="relative w-full md:w-96">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
-          <Input
-            type="search"
-            placeholder="Rechercher une formation..."
-            className="pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-        </div>
-
-        {/* Formations */}
-        <Tabs defaultValue="available" className="w-full">
-          <TabsList className="grid w-full grid-cols-2">
-            <TabsTrigger value="available">Formations disponibles</TabsTrigger>
-            <TabsTrigger value="my">Mes formations</TabsTrigger>
-          </TabsList>
-          
-          <TabsContent value="available" className="mt-6">
-            <div className="space-y-4">
-              {isLoading ? (
-                <p className="text-gray-500">Chargement...</p>
-              ) : filteredAvailable && filteredAvailable.length > 0 ? (
-                filteredAvailable.map(formation => (
-                  <FormationCard
-                    key={formation.id}
-                    formation={formation}
-                    onViewDetails={handleViewDetails}
-                    onRegister={handleRegister}
-                    showRegisterButton={true}
-                  />
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-500">Aucune formation disponible pour le moment</p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-          
-          <TabsContent value="my" className="mt-6">
-            <div className="space-y-4">
-              {myFormations && myFormations.length > 0 ? (
-                myFormations.map(formation => (
-                  <FormationCard
-                    key={formation.id}
-                    formation={formation}
-                    onViewDetails={handleViewDetails}
-                  />
-                ))
-              ) : (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <Calendar className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                    <p className="text-gray-500">Vous n'êtes inscrit à aucune formation</p>
-                    <p className="text-sm text-gray-400 mt-2">
-                      Parcourez les formations disponibles pour vous inscrire
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </TabsContent>
-        </Tabs>
       </div>
-
-      <FormationDetails
-        isOpen={isDetailsOpen}
-        onClose={() => setIsDetailsOpen(false)}
-        formation={selectedFormation}
-        showRegisterButton={!myFormations?.some(mf => mf.id === selectedFormation?.id)}
-        onRegister={handleRegister}
-      />
-    </Layout>
+    </div>
   );
-}
+};
+
+export default LearnerDashboard;
