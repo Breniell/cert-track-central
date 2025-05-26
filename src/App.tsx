@@ -6,6 +6,8 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { MoodleProvider } from "@/contexts/MoodleContext";
+import { ToastContainer } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 // Pages CIMENCAM essentielles
 import TrainerDashboard from "./pages/TrainerDashboard";
@@ -22,6 +24,17 @@ const App = () => {
           <TooltipProvider>
             <Toaster />
             <Sonner />
+            <ToastContainer
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
             <Routes>
               <Route path="/trainer" element={<TrainerDashboard />} />
               <Route path="/learner" element={<LearnerDashboard />} />

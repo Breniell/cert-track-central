@@ -1,16 +1,59 @@
 
 import React, { useState } from 'react';
-import { BarChart3, Users, Calendar, CheckSquare } from 'lucide-react';
+import { BarChart3, Users, Calendar, Filter, Download } from 'lucide-react';
 import { useFormations } from '../hooks/useMoodle';
+import { Button } from '@/components/ui/button';
+import MoodleFormationCard from '../components/moodle/MoodleFormationCard';
+import SearchFilter from '../components/moodle/SearchFilter';
+import { toast } from 'react-toastify';
 
 const RHDashboard: React.FC = () => {
   const { data: formations = [], isLoading } = useFormations();
   const [activeTab, setActiveTab] = useState<'overview' | 'formations'>('overview');
-  
+  const [searchTerm, setSearchTerm] = useState('');
+  const [statusFilter, setStatusFilter] = useState<string>('all');
+
+  // Apply filters
+  const filteredFormations = formations.filter(formation => {
+    const matchesSearch = formation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         formation.location.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         formation.trainerName.toLowerCase().includes(searchTerm.toLowerCase());
+    
+    const matchesStatus = statusFilter === 'all' || formation.status === statusFilter;
+    
+    return matchesSearch && matchesStatus;
+  });
+
   const formationsByStatus = {
     upcoming: formations.filter(f => f.status === 'upcoming').length,
+    ongoing: formations.filter(f => f.status === 'ongoing').length,
     completed: formations.filter(f => f.status === 'completed').length,
     cancelled: formations.filter(f => f.status === 'cancelled').length,
+  };
+
+  const handleExport = () => {
+    const csvData = filteredFormations.map(f => ({
+      Titre: f.title,
+      Formateur: f.trainerName,
+      Date: f.startDate,
+      Lieu: f.location,
+      Participants: `${f.participants.length}/${f.maxParticipants}`,
+      Statut: f.status
+    }));
+    
+    const csvContent = "data:text/csv;charset=utf-8," 
+      + Object.keys(csvData[0]).join(",") + "\n"
+      + csvData.map(row => Object.values(row).join(",")).join("\n");
+    
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", "formations_rh.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    
+    toast.success("Export réalisé avec succès");
   };
 
   if (isLoading) {
@@ -64,7 +107,7 @@ const RHDashboard: React.FC = () => {
           <div className="p-6">
             {activeTab === 'overview' && (
               <div className="space-y-6">
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                   <div className="bg-blue-50 rounded-lg p-4">
                     <div className="flex justify-between items-start">
                       <div>
@@ -78,10 +121,20 @@ const RHDashboard: React.FC = () => {
                   <div className="bg-green-50 rounded-lg p-4">
                     <div className="flex justify-between items-start">
                       <div>
-                        <p className="text-gray-600 text-sm">Formations terminées</p>
-                        <p className="text-3xl font-bold text-green-600 mt-1">{formationsByStatus.completed}</p>
+                        <p className="text-gray-600 text-sm">Formations en cours</p>
+                        <p className="text-3xl font-bold text-green-600 mt-1">{formationsByStatus.ongoing}</p>
                       </div>
-                      <CheckSquare className="text-green-600" size={24} />
+                      <Users className="text-green-600" size={24} />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-50 rounded-lg p-4">
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <p className="text-gray-600 text-sm">Formations terminées</p>
+                        <p className="text-3xl font-bold text-gray-700 mt-1">{formationsByStatus.completed}</p>
+                      </div>
+                      <BarChart3 className="text-gray-700" size={24} />
                     </div>
                   </div>
                   
@@ -95,84 +148,55 @@ const RHDashboard: React.FC = () => {
                     </div>
                   </div>
                 </div>
-                
-                <div className="bg-white rounded-lg border border-gray-200 p-5">
-                  <h3 className="text-lg font-semibold text-gray-900 mb-4">Statistiques globales</h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Total des formations</p>
-                      <div className="flex items-end">
-                        <span className="text-3xl font-bold text-gray-900">{formations.length}</span>
-                        <span className="text-sm text-blue-600 ml-2 mb-1">+12% vs mois précédent</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Taux de participation moyen</p>
-                      <div className="flex items-end">
-                        <span className="text-3xl font-bold text-gray-900">87%</span>
-                        <span className="text-sm text-red-600 ml-2 mb-1">-3% vs mois précédent</span>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <p className="text-sm text-gray-600 mb-1">Satisfaction moyenne</p>
-                      <div className="flex items-end">
-                        <span className="text-3xl font-bold text-gray-900">4.2/5</span>
-                        <span className="text-sm text-blue-600 ml-2 mb-1">+0.3 vs mois précédent</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             )}
 
             {activeTab === 'formations' && (
               <div className="space-y-6">
-                {formations.length > 0 ? (
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                  <SearchFilter
+                    searchTerm={searchTerm}
+                    onSearchChange={setSearchTerm}
+                    placeholder="Rechercher par titre, lieu ou formateur..."
+                  />
+                  
+                  <div className="flex gap-3">
+                    <select
+                      value={statusFilter}
+                      onChange={(e) => setStatusFilter(e.target.value)}
+                      className="px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                    >
+                      <option value="all">Tous les statuts</option>
+                      <option value="upcoming">À venir</option>
+                      <option value="ongoing">En cours</option>
+                      <option value="completed">Terminées</option>
+                      <option value="cancelled">Annulées</option>
+                    </select>
+                    
+                    <Button
+                      onClick={handleExport}
+                      variant="outline"
+                      className="flex items-center gap-2"
+                    >
+                      <Download size={16} />
+                      Exporter
+                    </Button>
+                  </div>
+                </div>
+                
+                {filteredFormations.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {formations.map(formation => (
-                      <div key={formation.id} className="bg-white border border-gray-200 rounded-lg p-6">
-                        <div className="space-y-4">
-                          <div>
-                            <h3 className="text-lg font-semibold text-gray-900">{formation.title}</h3>
-                            <p className="text-sm text-gray-600 mt-1">{formation.description}</p>
-                          </div>
-                          
-                          <div className="space-y-2">
-                            <div className="flex items-center text-sm text-gray-600">
-                              <Calendar className="w-4 h-4 mr-2" />
-                              {new Date(formation.startDate).toLocaleDateString('fr-FR')}
-                            </div>
-                            <div className="flex items-center text-sm text-gray-600">
-                              <Users className="w-4 h-4 mr-2" />
-                              {formation.participants.length}/{formation.maxParticipants} participants
-                            </div>
-                            <div className="text-sm text-gray-600">
-                              <strong>Formateur:</strong> {formation.trainerName}
-                            </div>
-                          </div>
-
-                          <div className="pt-4 border-t border-gray-100">
-                            <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                              formation.status === 'upcoming' 
-                                ? 'bg-blue-100 text-blue-700'
-                                : formation.status === 'completed'
-                                ? 'bg-green-100 text-green-700'
-                                : 'bg-gray-100 text-gray-700'
-                            }`}>
-                              {formation.status === 'upcoming' ? 'À venir' : 
-                               formation.status === 'completed' ? 'Terminée' : formation.status}
-                            </span>
-                          </div>
-                        </div>
-                      </div>
+                    {filteredFormations.map(formation => (
+                      <MoodleFormationCard
+                        key={formation.id}
+                        formation={formation}
+                        showActions={false}
+                      />
                     ))}
                   </div>
                 ) : (
                   <div className="text-center py-12">
-                    <p className="text-gray-500">Aucune formation disponible.</p>
+                    <p className="text-gray-500">Aucune formation correspondant aux critères.</p>
                   </div>
                 )}
               </div>

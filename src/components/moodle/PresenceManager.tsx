@@ -1,26 +1,18 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Clock, Users } from "lucide-react";
 import { useMoodle } from "../../contexts/MoodleContext";
-import { toast } from "@/hooks/use-toast";
+import { useMarkAttendance, useFormationAttendance, useFormationUsers } from "../../hooks/useMoodle";
+import { toast } from "react-toastify";
 
 interface PresenceManagerProps {
   formationId: string;
   sessionId?: string;
   isTrainerView?: boolean;
-}
-
-interface AttendanceRecord {
-  user_id: string;
-  username: string;
-  firstname: string;
-  lastname: string;
-  status: 'present' | 'absent' | 'late';
-  timestamp?: number;
 }
 
 export default function PresenceManager({ 
@@ -29,11 +21,14 @@ export default function PresenceManager({
   isTrainerView = false 
 }: PresenceManagerProps) {
   const { user, isTrainer } = useMoodle();
-  const [attendanceRecords, setAttendanceRecords] = useState<AttendanceRecord[]>([]);
   const [pinCode, setPinCode] = useState("");
   const [sessionPinCode, setSessionPinCode] = useState("");
   const [isSessionActive, setIsSessionActive] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+
+  const { data: attendances = [], refetch: refetchAttendance } = useFormationAttendance(formationId);
+  const { data: users = [] } = useFormationUsers(formationId);
+  const markAttendanceMutation = useMarkAttendance();
 
   const startAttendanceSession = async () => {
     if (!isTrainer) return;
@@ -47,16 +42,9 @@ export default function PresenceManager({
       await new Promise(resolve => setTimeout(resolve, 1000));
 
       setIsSessionActive(true);
-      toast({
-        title: "Session de présence démarrée",
-        description: `Code PIN: ${generatedPin}`
-      });
+      toast.success(`Session de présence démarrée - Code PIN: ${generatedPin}`);
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Impossible de démarrer la session de présence"
-      });
+      toast.error("Impossible de démarrer la session de présence");
     } finally {
       setIsLoading(false);
     }
@@ -67,26 +55,40 @@ export default function PresenceManager({
 
     setIsLoading(true);
     try {
-      // Simuler la vérification du code PIN
       await new Promise(resolve => setTimeout(resolve, 500));
       
       if (pinCode === sessionPinCode) {
-        toast({
-          title: "Présence marquée",
-          description: "Votre présence a été enregistrée avec succès"
+        await markAttendanceMutation.mutateAsync({
+          formationId,
+          userId: user.id,
+          status: 'present'
         });
+        
+        toast.success("Votre présence a été enregistrée avec succès");
         setPinCode("");
+        refetchAttendance();
       } else {
         throw new Error("Code PIN incorrect");
       }
     } catch (error) {
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Code PIN incorrect ou session expirée"
-      });
+      toast.error("Code PIN incorrect ou session expirée");
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleStatusChange = async (userId: string, status: 'present' | 'absent' | 'late') => {
+    try {
+      await markAttendanceMutation.mutateAsync({
+        formationId,
+        userId,
+        status
+      });
+      
+      toast.success("Présence mise à jour");
+      refetchAttendance();
+    } catch (error) {
+      toast.error("Erreur lors de la mise à jour");
     }
   };
 
@@ -150,22 +152,50 @@ export default function PresenceManager({
                   </p>
                 </div>
 
-                {attendanceRecords.length > 0 && (
+                {users.length > 0 && (
                   <div className="space-y-2">
                     <h4 className="font-medium text-gray-900">
-                      Présences en temps réel
+                      Liste des participants
                     </h4>
-                    {attendanceRecords.map((record) => (
-                      <div key={record.user_id} className="flex items-center justify-between p-3 border rounded">
-                        <div className="flex items-center">
-                          {getStatusIcon(record.status)}
-                          <span className="ml-3 font-medium">
-                            {record.firstname} {record.lastname}
-                          </span>
+                    {users.map((user) => {
+                      const attendance = attendances.find(a => a.userId === user.id);
+                      return (
+                        <div key={user.id} className="flex items-center justify-between p-3 border rounded">
+                          <div className="flex items-center">
+                            {attendance && getStatusIcon(attendance.status)}
+                            <span className="ml-3 font-medium">
+                              {user.name}
+                            </span>
+                          </div>
+                          <div className="flex gap-2">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
+                              onClick={() => handleStatusChange(user.id, 'present')}
+                            >
+                              Présent
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-yellow-600 border-yellow-600 hover:bg-yellow-600 hover:text-white"
+                              onClick={() => handleStatusChange(user.id, 'late')}
+                            >
+                              Retard
+                            </Button>
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="text-red-600 border-red-600 hover:bg-red-600 hover:text-white"
+                              onClick={() => handleStatusChange(user.id, 'absent')}
+                            >
+                              Absent
+                            </Button>
+                          </div>
                         </div>
-                        {getStatusBadge(record.status)}
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
