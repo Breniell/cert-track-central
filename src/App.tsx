@@ -7,7 +7,7 @@ import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider, useAuth } from "@/contexts/AuthContext";
 
-// Pages
+// Pages existantes
 import Login from "./pages/Login";
 import Index from "./pages/Index";
 import FormationsHSE from "./pages/formations/FormationsHSE";
@@ -21,37 +21,38 @@ import AdminDashboard from "./pages/AdminDashboard";
 import AdminConsole from "./pages/AdminConsole";
 import Budget from "./pages/Budget";
 
-// Nouvelles pages pour les formateurs
+// Nouvelles pages CIMENCAM
+import TrainerDashboard from "./pages/TrainerDashboard";
+import LearnerDashboard from "./pages/LearnerDashboard";
+import RHDashboard from "./pages/RHDashboard";
+
+// Pages formateur
 import FormateurDashboard from "./pages/formateur/Dashboard";
 import FormateurFormations from "./pages/formateur/Formations";
 import FormateurPlanning from "./pages/formateur/Planning";
 import GestionPointage from "./pages/formateur/GestionPointage";
 import FormateurEvaluations from "./pages/formateur/FormateurEvaluations";
 
-// Nouvelles pages pour le personnel
+// Pages personnel
 import PersonnelDashboard from "./pages/personnel/Dashboard";
 import PersonnelFormations from "./pages/personnel/Formations";
 import PersonnelHistorique from "./pages/personnel/Historique";
 import PersonnelDocuments from "./pages/personnel/Documents";
 
-// Nouvelles pages HSE
+// Pages HSE
 import VerificationDocuments from "./pages/hse/VerificationDocuments";
 
-// Nouvelles pages pour les appels d'offres
+// Pages appels d'offre
 import AppelsOffre from "./pages/appeldoffre/AppelsOffre";
 import AppelOffreDetails from "./pages/appeldoffre/AppelOffreDetails";
 import NouvelAppelOffre from "./pages/appeldoffre/NouvelAppelOffre";
 
-// Imports for new pages
+// Autres pages
 import FormationsMetiers from "./pages/formations/FormationsMetiers";
 import PlanningGeneral from "./pages/planning/PlanningGeneral";
-
-// New pages for advanced features
 import FormateurProfile from "./pages/formateurs/FormateurProfile";
 import EvaluationManager from "./pages/evaluations/EvaluationManager";
 import BudgetManager from "./pages/budget/BudgetManager";
-
-// Nouvelle page pour le système anti-triche
 import QuizzAntiTriche from "./pages/evaluations/QuizzAntiTriche";
 
 // Route protégée par authentification
@@ -78,6 +79,13 @@ const AppRoutes = () => {
   return (
     <Routes>
       <Route path="/login" element={<Login />} />
+      
+      {/* Routes CIMENCAM spécialisées */}
+      <Route path="/cimencam">
+        <Route path="trainer" element={<ProtectedRoute element={<TrainerDashboard />} requiredRole={['formateur']} />} />
+        <Route path="learner" element={<ProtectedRoute element={<LearnerDashboard />} requiredRole={['personnel', 'sous-traitant']} />} />
+        <Route path="rh" element={<ProtectedRoute element={<RHDashboard />} requiredRole={['rh', 'administrateur']} />} />
+      </Route>
       
       {/* Routes administrateur et générales */}
       <Route path="/" element={<ProtectedRoute element={<Index />} />} />
