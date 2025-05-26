@@ -4,15 +4,15 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock, MapPin, Users, Download, Edit } from "lucide-react";
-import { MoodleFormation } from "@/services/moodleApi";
-import { useMoodle } from "@/contexts/MoodleContext";
+import { Formation } from "../../types";
+import { useMoodle } from "../../contexts/MoodleContext";
 import { toast } from "@/hooks/use-toast";
 
 interface MoodleFormationCardProps {
-  formation: MoodleFormation;
-  onEdit?: (formation: MoodleFormation) => void;
-  onEnroll?: (formationId: number) => void;
-  onViewDetails?: (formation: MoodleFormation) => void;
+  formation: Formation;
+  onEdit?: (formation: Formation) => void;
+  onEnroll?: (formationId: string) => void;
+  onViewDetails?: (formation: Formation) => void;
   showActions?: boolean;
 }
 
@@ -23,25 +23,28 @@ export default function MoodleFormationCard({
   onViewDetails,
   showActions = true
 }: MoodleFormationCardProps) {
-  const { isTrainer, isRH, hasCapability } = useMoodle();
+  const { isTrainer, isRH } = useMoodle();
   const [isEnrolling, setIsEnrolling] = useState(false);
 
-  const formatDate = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleDateString('fr-FR');
+  const formatDate = (dateStr: string) => {
+    return new Date(dateStr).toLocaleDateString('fr-FR');
   };
 
-  const formatTime = (timestamp: number) => {
-    return new Date(timestamp * 1000).toLocaleTimeString('fr-FR', {
+  const formatTime = (dateStr: string) => {
+    return new Date(dateStr).toLocaleTimeString('fr-FR', {
       hour: '2-digit',
       minute: '2-digit'
     });
   };
 
   const getStatusBadge = () => {
-    const now = Date.now() / 1000;
-    if (formation.startdate > now) {
-      return <Badge className="bg-cimencam-green text-white">À venir</Badge>;
-    } else if (formation.enddate > now) {
+    const now = new Date();
+    const startDate = new Date(formation.startDate);
+    const endDate = new Date(formation.endDate);
+    
+    if (startDate > now) {
+      return <Badge className="bg-green-500 text-white">À venir</Badge>;
+    } else if (endDate > now) {
       return <Badge className="bg-blue-500 text-white">En cours</Badge>;
     } else {
       return <Badge className="bg-gray-500 text-white">Terminée</Badge>;
@@ -52,7 +55,7 @@ export default function MoodleFormationCard({
     return formation.modality === 'online' ? (
       <Badge variant="outline" className="text-blue-600 border-blue-600">En ligne</Badge>
     ) : (
-      <Badge variant="outline" className="text-cimencam-green border-cimencam-green">Présentiel</Badge>
+      <Badge variant="outline" className="text-green-600 border-green-600">Présentiel</Badge>
     );
   };
 
@@ -64,7 +67,7 @@ export default function MoodleFormationCard({
       await onEnroll(formation.id);
       toast({
         title: "Inscription réussie",
-        description: `Vous êtes maintenant inscrit à "${formation.name}"`
+        description: `Vous êtes maintenant inscrit à "${formation.title}"`
       });
     } catch (error) {
       toast({
@@ -77,9 +80,9 @@ export default function MoodleFormationCard({
     }
   };
 
-  const isFormationFull = formation.enrolled >= formation.capacity;
-  const canEdit = isTrainer && hasCapability('local/cimencamplus:manage_formations');
-  const canEnroll = !isTrainer && !isRH && formation.startdate > Date.now() / 1000 && !isFormationFull;
+  const isFormationFull = formation.participants.length >= formation.maxParticipants;
+  const canEdit = isTrainer;
+  const canEnroll = !isTrainer && !isRH && formation.status === 'upcoming' && !isFormationFull;
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -89,12 +92,9 @@ export default function MoodleFormationCard({
             <div className="flex gap-2 mb-2">
               {getStatusBadge()}
               {getModalityBadge()}
-              <Badge variant="outline" className="text-cimencam-gray">
-                {formation.category}
-              </Badge>
             </div>
-            <CardTitle className="text-lg text-cimencam-gray">{formation.name}</CardTitle>
-            <CardDescription className="mt-1">{formation.summary}</CardDescription>
+            <CardTitle className="text-lg text-gray-900">{formation.title}</CardTitle>
+            <CardDescription className="mt-1">{formation.description}</CardDescription>
           </div>
         </div>
       </CardHeader>
@@ -104,11 +104,11 @@ export default function MoodleFormationCard({
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
             <div className="flex items-center text-gray-600">
               <Calendar className="w-4 h-4 mr-2" />
-              {formatDate(formation.startdate)}
+              {formatDate(formation.startDate)}
             </div>
             <div className="flex items-center text-gray-600">
               <Clock className="w-4 h-4 mr-2" />
-              {formatTime(formation.startdate)} - {formatTime(formation.enddate)}
+              {formatTime(formation.startDate)} - {formatTime(formation.endDate)}
             </div>
             <div className="flex items-center text-gray-600">
               <MapPin className="w-4 h-4 mr-2" />
@@ -116,12 +116,12 @@ export default function MoodleFormationCard({
             </div>
             <div className="flex items-center text-gray-600">
               <Users className="w-4 h-4 mr-2" />
-              {formation.enrolled} / {formation.capacity} participants
+              {formation.participants.length} / {formation.maxParticipants} participants
             </div>
           </div>
 
           <div className="text-sm text-gray-600">
-            <span className="font-medium">Formateur:</span> {formation.trainer_name}
+            <span className="font-medium">Formateur:</span> {formation.trainerName}
           </div>
 
           {showActions && (
@@ -132,7 +132,7 @@ export default function MoodleFormationCard({
                     variant="outline"
                     size="sm"
                     onClick={() => onEdit?.(formation)}
-                    className="text-cimencam-green border-cimencam-green hover:bg-cimencam-green hover:text-white"
+                    className="text-green-600 border-green-600 hover:bg-green-600 hover:text-white"
                   >
                     <Edit className="w-4 h-4 mr-1" />
                     Modifier
@@ -140,7 +140,7 @@ export default function MoodleFormationCard({
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-cimencam-gray border-cimencam-gray hover:bg-cimencam-gray hover:text-white"
+                    className="text-gray-600 border-gray-600 hover:bg-gray-600 hover:text-white"
                   >
                     <Download className="w-4 h-4 mr-1" />
                     Participants
@@ -152,7 +152,7 @@ export default function MoodleFormationCard({
                 <Button
                   onClick={handleEnroll}
                   disabled={isEnrolling || isFormationFull}
-                  className="bg-cimencam-green hover:bg-green-600 text-white"
+                  className="bg-green-500 hover:bg-green-600 text-white"
                   size="sm"
                 >
                   {isEnrolling ? "Inscription..." : "S'inscrire"}
@@ -163,7 +163,7 @@ export default function MoodleFormationCard({
                 variant="outline"
                 size="sm"
                 onClick={() => onViewDetails?.(formation)}
-                className="text-cimencam-gray border-cimencam-gray hover:bg-cimencam-gray hover:text-white"
+                className="text-gray-600 border-gray-600 hover:bg-gray-600 hover:text-white"
               >
                 Détails
               </Button>

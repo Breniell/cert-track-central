@@ -25,9 +25,9 @@ const MoodleContext = createContext<MoodleContextType | undefined>(undefined);
 export const MoodleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { data: user, isLoading } = useCurrentUser();
 
-  const isTrainer = user?.roles?.includes('trainer') || false;
-  const isLearner = user?.roles?.includes('student') || false;
-  const isRH = user?.roles?.includes('manager') || user?.roles?.includes('hr') || false;
+  const isTrainer = user?.role === 'trainer' || false;
+  const isLearner = user?.role === 'learner' || false;
+  const isRH = user?.role === 'hr' || false;
 
   const value = {
     user: user ? {

@@ -1,22 +1,21 @@
 
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, Clock, Users } from "lucide-react";
-import { moodleApi } from "@/services/moodleApi";
-import { useMoodle } from "@/contexts/MoodleContext";
+import { useMoodle } from "../../contexts/MoodleContext";
 import { toast } from "@/hooks/use-toast";
 
 interface PresenceManagerProps {
-  formationId: number;
-  sessionId?: number;
+  formationId: string;
+  sessionId?: string;
   isTrainerView?: boolean;
 }
 
 interface AttendanceRecord {
-  user_id: number;
+  user_id: string;
   username: string;
   firstname: string;
   lastname: string;
@@ -44,12 +43,8 @@ export default function PresenceManager({
       const generatedPin = Math.floor(1000 + Math.random() * 9000).toString();
       setSessionPinCode(generatedPin);
       
-      await moodleApi.createAttendanceSession(formationId, {
-        date: new Date().toISOString().split('T')[0],
-        start_time: new Date().toTimeString().split(' ')[0],
-        end_time: new Date(Date.now() + 2 * 60 * 60 * 1000).toTimeString().split(' ')[0], // +2h
-        pin_code: generatedPin
-      });
+      // Simuler l'appel API
+      await new Promise(resolve => setTimeout(resolve, 1000));
 
       setIsSessionActive(true);
       toast({
@@ -72,12 +67,18 @@ export default function PresenceManager({
 
     setIsLoading(true);
     try {
-      await moodleApi.markAttendance(sessionId, user.id, 'present', pinCode);
-      toast({
-        title: "Présence marquée",
-        description: "Votre présence a été enregistrée avec succès"
-      });
-      setPinCode("");
+      // Simuler la vérification du code PIN
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      if (pinCode === sessionPinCode) {
+        toast({
+          title: "Présence marquée",
+          description: "Votre présence a été enregistrée avec succès"
+        });
+        setPinCode("");
+      } else {
+        throw new Error("Code PIN incorrect");
+      }
     } catch (error) {
       toast({
         variant: "destructive",
@@ -92,22 +93,22 @@ export default function PresenceManager({
   const getStatusIcon = (status: string) => {
     switch (status) {
       case 'present':
-        return <CheckCircle className="w-5 h-5 text-cimencam-green" />;
+        return <CheckCircle className="w-5 h-5 text-green-500" />;
       case 'late':
         return <Clock className="w-5 h-5 text-yellow-500" />;
       default:
-        return <XCircle className="w-5 h-5 text-cimencam-red" />;
+        return <XCircle className="w-5 h-5 text-red-500" />;
     }
   };
 
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'present':
-        return <Badge className="bg-cimencam-green text-white">Présent</Badge>;
+        return <Badge className="bg-green-500 text-white">Présent</Badge>;
       case 'late':
         return <Badge className="bg-yellow-500 text-white">Retard</Badge>;
       default:
-        return <Badge className="bg-cimencam-red text-white">Absent</Badge>;
+        return <Badge className="bg-red-500 text-white">Absent</Badge>;
     }
   };
 
@@ -116,7 +117,7 @@ export default function PresenceManager({
       <div className="space-y-6">
         <Card>
           <CardHeader>
-            <CardTitle className="flex items-center text-cimencam-gray">
+            <CardTitle className="flex items-center text-gray-900">
               <Users className="w-5 h-5 mr-2" />
               Gestion des présences
             </CardTitle>
@@ -130,15 +131,15 @@ export default function PresenceManager({
                 <Button
                   onClick={startAttendanceSession}
                   disabled={isLoading}
-                  className="bg-cimencam-green hover:bg-green-600 text-white"
+                  className="bg-green-500 hover:bg-green-600 text-white"
                 >
                   {isLoading ? "Démarrage..." : "Démarrer une session"}
                 </Button>
               </div>
             ) : (
               <div className="space-y-4">
-                <div className="bg-cimencam-green/10 p-4 rounded-lg">
-                  <h4 className="font-medium text-cimencam-green mb-2">
+                <div className="bg-green-50 p-4 rounded-lg">
+                  <h4 className="font-medium text-green-700 mb-2">
                     Session active
                   </h4>
                   <p className="text-lg font-mono bg-white p-2 rounded border">
@@ -151,7 +152,7 @@ export default function PresenceManager({
 
                 {attendanceRecords.length > 0 && (
                   <div className="space-y-2">
-                    <h4 className="font-medium text-cimencam-gray">
+                    <h4 className="font-medium text-gray-900">
                       Présences en temps réel
                     </h4>
                     {attendanceRecords.map((record) => (
@@ -179,7 +180,7 @@ export default function PresenceManager({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-cimencam-gray">Marquer ma présence</CardTitle>
+        <CardTitle className="text-gray-900">Marquer ma présence</CardTitle>
       </CardHeader>
       <CardContent>
         {isSessionActive ? (
@@ -199,7 +200,7 @@ export default function PresenceManager({
               <Button
                 onClick={markPresence}
                 disabled={isLoading || pinCode.length !== 4}
-                className="bg-cimencam-green hover:bg-green-600 text-white"
+                className="bg-green-500 hover:bg-green-600 text-white"
               >
                 {isLoading ? "Vérification..." : "Je suis présent"}
               </Button>
