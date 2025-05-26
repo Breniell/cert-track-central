@@ -1,10 +1,17 @@
 
 import { createRoot } from 'react-dom/client';
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import MoodleApp from './MoodleApp.tsx';
 import './index.css';
 
-// Point d'entrée pour l'intégration Moodle
-// Ce fichier sera compilé séparément pour le plugin Moodle
+const queryClient = new QueryClient({
+  defaultOptions: {
+    queries: {
+      staleTime: 1000 * 60 * 5, // 5 minutes
+      retry: 2,
+    },
+  },
+});
 
 // Fonction d'initialisation appelée par Moodle
 window.initCimencamPlus = function(containerId: string, config: any = {}) {
@@ -25,7 +32,11 @@ window.initCimencamPlus = function(containerId: string, config: any = {}) {
 
   // Monter l'application React
   const root = createRoot(container);
-  root.render(<MoodleApp />);
+  root.render(
+    <QueryClientProvider client={queryClient}>
+      <MoodleApp />
+    </QueryClientProvider>
+  );
   
   console.log('CIMENCAM Plus plugin initialized successfully');
 };
@@ -34,7 +45,7 @@ window.initCimencamPlus = function(containerId: string, config: any = {}) {
 if (import.meta.env.DEV) {
   const container = document.getElementById('root');
   if (container) {
-    // Simuler les données Moodle pour le développement
+    // Simuler les données Moodle pour le développement avec rôle modifiable
     window.M = {
       cfg: {
         wwwroot: 'http://localhost',
@@ -46,12 +57,16 @@ if (import.meta.env.DEV) {
         firstname: 'Test',
         lastname: 'User',
         email: 'test@example.com',
-        roles: ['trainer'],
+        roles: ['trainer'], // Changez ici : 'trainer', 'student', 'manager'
         capabilities: ['local/cimencamplus:manage_formations']
       }
     };
     
     const root = createRoot(container);
-    root.render(<MoodleApp />);
+    root.render(
+      <QueryClientProvider client={queryClient}>
+        <MoodleApp />
+      </QueryClientProvider>
+    );
   }
 }
