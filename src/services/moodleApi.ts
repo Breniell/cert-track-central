@@ -46,9 +46,9 @@ class MoodleApiService {
   private sessionKey: string;
 
   constructor() {
-    // Ces valeurs seront injectées par Moodle via window.M ou props
-    this.baseUrl = (window as any).M?.cfg?.wwwroot || '';
-    this.sessionKey = (window as any).M?.cfg?.sesskey || '';
+    // Ces valeurs seront injectées par Moodle via window.M
+    this.baseUrl = window.M?.cfg?.wwwroot || '';
+    this.sessionKey = window.M?.cfg?.sesskey || '';
   }
 
   private async makeRequest(endpoint: string, data: any = {}) {
@@ -162,7 +162,7 @@ class MoodleApiService {
 
   // Utilisateur courant (fourni par Moodle)
   getCurrentUser(): MoodleUser | null {
-    return (window as any).M?.user || null;
+    return window.M?.user || null;
   }
 
   // Vérification des capacités utilisateur

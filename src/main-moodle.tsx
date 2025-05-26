@@ -17,7 +17,7 @@ window.initCimencamPlus = function(containerId: string, config: any = {}) {
 
   // Injecter la configuration Moodle dans window.M si pas déjà présent
   if (config && !window.M) {
-    (window as any).M = {
+    window.M = {
       cfg: config.moodle_config || {},
       user: config.current_user || null
     };
@@ -35,7 +35,7 @@ if (import.meta.env.DEV) {
   const container = document.getElementById('root');
   if (container) {
     // Simuler les données Moodle pour le développement
-    (window as any).M = {
+    window.M = {
       cfg: {
         wwwroot: 'http://localhost',
         sesskey: 'dev_session_key'
