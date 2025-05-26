@@ -1,11 +1,10 @@
-
 import { useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { toast } from "@/hooks/use-toast";
 import { useFormations } from "@/hooks/useFormations";
 import PlanningFilters from "@/components/planning/PlanningFilters";
 import FormationsList from "@/components/planning/FormationsList";
-import NewFormationDialog from "@/components/planning/NewFormationDialog";
+import { NewFormationDialog } from "@/components/planning/NewFormationDialog";
 import FormationDetailsDialog from "@/components/planning/FormationDetailsDialog";
 import { Button } from "@/components/ui/button";
 import { Plus, Download, Calendar } from "lucide-react";
@@ -146,9 +145,8 @@ export default function Planning() {
       </div>
 
       <NewFormationDialog
-        isOpen={isNewFormationDialogOpen}
-        onClose={() => setIsNewFormationDialogOpen(false)}
-        onSave={handleNewFormation}
+        open={isNewFormationDialogOpen}
+        onOpenChange={setIsNewFormationDialogOpen}
       />
 
       <FormationDetailsDialog

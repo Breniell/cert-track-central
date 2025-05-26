@@ -2,7 +2,6 @@
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { DocumentVerification } from "@/components/documents/DocumentVerification";
 import { FileText, Plus, UploadCloud } from "lucide-react";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -72,7 +71,28 @@ const Documents = () => {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DocumentVerification onSubmit={handleUpload} />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Type de document</label>
+                  <select className="w-full p-2 border border-gray-300 rounded-md">
+                    <option>Certificat de formation</option>
+                    <option>Habilitation</option>
+                    <option>Attestation</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Fichier</label>
+                  <input 
+                    type="file" 
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    accept=".pdf,.jpg,.jpeg,.png"
+                  />
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleUpload}>Envoyer</Button>
+                  <Button variant="outline" onClick={() => setIsUploading(false)}>Annuler</Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -87,7 +107,7 @@ const Documents = () => {
                         document.statut === "Valide"
                           ? "default"
                           : document.statut === "Bientôt expiré"
-                          ? "warning"
+                          ? "secondary"
                           : "destructive"
                       }
                     >

@@ -2,7 +2,6 @@
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { EvaluationForm } from "@/components/evaluations/EvaluationForm";
 import { useState } from "react";
 import { ClipboardCheck, Eye, Plus } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -68,7 +67,28 @@ const FormateurEvaluations = () => {
               <CardDescription>Créez une nouvelle évaluation pour une formation</CardDescription>
             </CardHeader>
             <CardContent>
-              <EvaluationForm onSubmit={handleEvaluationSubmit} />
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium mb-2">Titre de l'évaluation</label>
+                  <input 
+                    type="text" 
+                    className="w-full p-2 border border-gray-300 rounded-md"
+                    placeholder="Ex: Évaluation sécurité en hauteur"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-medium mb-2">Formation associée</label>
+                  <select className="w-full p-2 border border-gray-300 rounded-md">
+                    <option>Sélectionner une formation</option>
+                    <option>Sécurité en hauteur</option>
+                    <option>Manipulation des produits chimiques</option>
+                  </select>
+                </div>
+                <div className="flex gap-2">
+                  <Button onClick={handleEvaluationSubmit}>Créer l'évaluation</Button>
+                  <Button variant="outline" onClick={() => setIsCreatingEvaluation(false)}>Annuler</Button>
+                </div>
+              </div>
             </CardContent>
           </Card>
         ) : (
@@ -81,7 +101,7 @@ const FormateurEvaluations = () => {
             <TabsContent value="en-cours">
               <div className="grid grid-cols-1 gap-4">
                 {evaluations
-                  .filter((eval) => eval.statut === "En cours")
+                  .filter((evaluation) => evaluation.statut === "En cours")
                   .map((evaluation) => (
                     <EvaluationCard key={evaluation.id} evaluation={evaluation} />
                   ))}
@@ -90,7 +110,7 @@ const FormateurEvaluations = () => {
             <TabsContent value="terminees">
               <div className="grid grid-cols-1 gap-4">
                 {evaluations
-                  .filter((eval) => eval.statut === "Terminée")
+                  .filter((evaluation) => evaluation.statut === "Terminée")
                   .map((evaluation) => (
                     <EvaluationCard key={evaluation.id} evaluation={evaluation} />
                   ))}
@@ -110,7 +130,7 @@ const FormateurEvaluations = () => {
   );
 };
 
-const EvaluationCard = ({ evaluation }) => {
+const EvaluationCard = ({ evaluation }: { evaluation: any }) => {
   return (
     <Card>
       <CardHeader className="pb-2">
