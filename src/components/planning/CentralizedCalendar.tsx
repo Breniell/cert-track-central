@@ -85,28 +85,32 @@ export function CentralizedCalendar({ onEventSelect, onNewEvent }: CentralizedCa
         
         const calendarEvents = formations.map(formation => ({
           id: formation.id,
-          title: formation.titre,
-          start: new Date(formation.date),
-          end: addDays(new Date(formation.date), 1),
-          type: formation.type,
-          formateur: formation.formateur,
-          lieu: formation.lieu,
-          participants: formation.participants,
+          title: formation.title,
+          start: new Date(formation.startDate),
+          end: addDays(new Date(formation.startDate), 1),
+          type: formation.modality === 'HSE' ? 'HSE' : 'Métier',
+          formateur: formation.trainerId,
+          lieu: formation.location,
+          participants: 0,
           maxParticipants: formation.maxParticipants,
-          statut: formation.statut,
-          estUrgente: formation.estUrgente,
+          statut: formation.status,
+          estUrgente: false,
           formation: formation
         }));
         
         setEvents(calendarEvents);
         
-        const uniqueFormateurs = [...new Set(formations.map(f => f.formateur))].map((nom, index) => ({
-          id: index + 1,
-          nom
-        }));
+        // Fix type issues by ensuring proper string types
+        const uniqueFormateurs = [...new Set(formations.map(f => f.trainerId))]
+          .filter((nom): nom is string => typeof nom === 'string')
+          .map((nom, index) => ({
+            id: index + 1,
+            nom
+          }));
         setFormateurs(uniqueFormateurs);
         
-        const uniqueLieux = [...new Set(formations.map(f => f.lieu))];
+        const uniqueLieux = [...new Set(formations.map(f => f.location))]
+          .filter((lieu): lieu is string => typeof lieu === 'string');
         setLieux(uniqueLieux);
         
       } catch (error) {

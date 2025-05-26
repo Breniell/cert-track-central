@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { Formation } from "@/types/Formation";
+import { Formation } from "@/types";
 import { formationService } from "@/services/formationService";
 import { DateRange } from "react-day-picker";
 import { isWithinInterval, parseISO } from "date-fns";
@@ -32,13 +32,13 @@ export const useFormations = () => {
 
   const nextId = () => {
     return formations.length > 0 
-      ? Math.max(...formations.map(f => f.id)) + 1 
+      ? parseInt(formations[formations.length - 1].id) + 1 
       : 1;
   };
 
   const handleNewFormation = (formationData: any) => {
     const newFormation = {
-      id: nextId(),
+      id: nextId().toString(),
       ...formationData,
     };
     
@@ -56,17 +56,16 @@ export const useFormations = () => {
 
   const filteredFormations = formations.filter(formation => {
     // Filtrage par recherche
-    const matchesSearch = formation.titre.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         formation.formateur.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         formation.lieu.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch = formation.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         formation.trainerId.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         formation.location.toLowerCase().includes(searchTerm.toLowerCase());
     
     // Filtrage par type
     const matchesType = selectedType === 'Tous' || 
-                        formation.type === selectedType || 
-                        (selectedType === 'Urgente' && formation.estUrgente);
+                        formation.modality === selectedType;
     
     // Filtrage par date
-    const matchesDateRange = isWithinDateRange(formation.date);
+    const matchesDateRange = isWithinDateRange(formation.startDate);
     
     return matchesSearch && matchesType && matchesDateRange;
   });
