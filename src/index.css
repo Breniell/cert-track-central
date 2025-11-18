@@ -1,92 +1,67 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
+    /* CIMENCAM Color Palette */
+    --ciment-green: 142 100% 31%;
+    --ciment-green-dark: 142 100% 20%;
+    --ciment-gray-light: 0 0% 90%;
+    --industrial-gray: 0 0% 29%;
+    --safety-yellow: 45 100% 50%;
+    
     --background: 0 0% 100%;
-    --foreground: 210 11% 15%;
-
+    --foreground: 0 0% 29%;
     --card: 0 0% 100%;
-    --card-foreground: 210 11% 15%;
-
+    --card-foreground: 0 0% 29%;
     --popover: 0 0% 100%;
-    --popover-foreground: 210 11% 15%;
-
-    --primary: 134 61% 41%;
+    --popover-foreground: 0 0% 29%;
+    --primary: 142 100% 31%;
     --primary-foreground: 0 0% 100%;
-
-    --secondary: 210 11% 15%;
-    --secondary-foreground: 0 0% 100%;
-
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
-
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 210 11% 15%;
-
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
-
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 134 61% 41%;
-
-    --radius: 0.5rem;
-
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 210 11% 15%;
-    --sidebar-primary: 210 11% 15%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 210 40% 96.1%;
-    --sidebar-accent-foreground: 210 11% 15%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 134 61% 41%;
-
-    /* Couleurs spécifiques CIMENCAM */
-    --cimencam-green: 134 61% 41%;
-    --cimencam-red: 0 84% 60%;
-    --cimencam-gray: 210 11% 15%;
-    --cimencam-white: 0 0% 100%;
-  }
-
-  .dark {
-    --background: 210 11% 15%;
-    --foreground: 0 0% 98%;
-
-    --card: 210 11% 15%;
-    --card-foreground: 0 0% 98%;
-
-    --popover: 210 11% 15%;
-    --popover-foreground: 0 0% 98%;
-
-    --primary: 134 61% 41%;
-    --primary-foreground: 0 0% 100%;
-
-    --secondary: 217.2 32.6% 17.5%;
-    --secondary-foreground: 0 0% 98%;
-
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
-
-    --accent: 217.2 32.6% 17.5%;
-    --accent-foreground: 0 0% 98%;
-
-    --destructive: 0 84% 60%;
+    --secondary: 0 0% 90%;
+    --secondary-foreground: 0 0% 29%;
+    --muted: 0 0% 90%;
+    --muted-foreground: 0 0% 46%;
+    --accent: 142 100% 20%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 134 61% 41%;
-    --sidebar-background: 210 11% 15%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 134 61% 41%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 217.2 32.6% 17.5%;
-    --sidebar-ring: 134 61% 41%;
+    --warning: 45 100% 50%;
+    --warning-foreground: 0 0% 29%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 142 100% 31%;
+    --chart-1: 142 100% 31%;
+    --chart-2: 142 100% 20%;
+    --chart-3: 45 100% 50%;
+    --chart-4: 0 0% 46%;
+    --chart-5: 0 0% 90%;
+    --radius: 0.5rem;
+  }
+  
+  .dark {
+    --background: 0 0% 12%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 12%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 142 100% 31%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 20%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 65%;
+    --accent: 142 100% 20%;
+    --accent-foreground: 0 0% 100%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --warning: 45 100% 50%;
+    --warning-foreground: 0 0% 12%;
+    --border: 0 0% 20%;
+    --input: 0 0% 20%;
+    --ring: 142 100% 31%;
   }
 }
 
@@ -94,45 +69,7 @@
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }
-}
-
-/* Classes utilitaires CIMENCAM */
-.bg-cimencam-green {
-  background-color: #28a745;
-}
-
-.bg-cimencam-red {
-  background-color: #dc3545;
-}
-
-.bg-cimencam-gray {
-  background-color: #343a40;
-}
-
-.text-cimencam-green {
-  color: #28a745;
-}
-
-.text-cimencam-red {
-  color: #dc3545;
-}
-
-.text-cimencam-gray {
-  color: #343a40;
-}
-
-.border-cimencam-green {
-  border-color: #28a745;
-}
-
-.hover\:bg-cimencam-green:hover {
-  background-color: #28a745;
-}
-
-.hover\:bg-cimencam-red:hover {
-  background-color: #dc3545;
 }
