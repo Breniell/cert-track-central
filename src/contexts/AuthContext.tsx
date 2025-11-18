@@ -1,127 +1,145 @@
+import { createContext, useContext, useEffect, useState } from 'react';
+import { User, Session } from '@supabase/supabase-js';
+import { supabase } from '@/integrations/supabase/client';
+import { useNavigate } from 'react-router-dom';
 
-import React, { createContext, useContext, useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { toast } from "@/components/ui/use-toast";
-import { authService, User, UserRole } from "@/services/authService";
+interface Profile {
+  id: string;
+  email: string;
+  first_name: string | null;
+  last_name: string | null;
+  phone: string | null;
+  department: string | null;
+  position: string | null;
+  site_id: string | null;
+  avatar_url: string | null;
+}
+
+interface UserRole {
+  id: string;
+  role: string;
+  site_id: string | null;
+}
 
 interface AuthContextType {
   user: User | null;
-  isLoading: boolean;
-  login: (userId: string, role: UserRole) => void;
-  logout: () => Promise<void>;
-  checkPermission: (permission: string) => Promise<boolean>;
+  session: Session | null;
+  profile: Profile | null;
+  roles: UserRole[];
+  loading: boolean;
+  signOut: () => Promise<void>;
+  hasRole: (role: string) => boolean;
+  hasAnyRole: (roles: string[]) => boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [roles, setRoles] = useState<UserRole[]>([]);
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Vérifier l'authentification au chargement
-  useEffect(() => {
-    const checkAuth = async () => {
-      setIsLoading(true);
-      try {
-        const token = localStorage.getItem("authToken");
-        if (token) {
-          const userData = await authService.checkAuth(token);
-          setUser(userData);
-        }
-      } catch (error) {
-        console.error("Erreur d'authentification:", error);
-        localStorage.removeItem("authToken");
-      } finally {
-        setIsLoading(false);
-      }
-    };
+  const fetchProfile = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
 
-    checkAuth();
+      if (error) throw error;
+      setProfile(data);
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+    }
+  };
+
+  const fetchRoles = async (userId: string) => {
+    try {
+      const { data, error } = await supabase
+        .from('user_roles')
+        .select('*')
+        .eq('user_id', userId);
+
+      if (error) throw error;
+      setRoles(data || []);
+    } catch (error) {
+      console.error('Error fetching roles:', error);
+    }
+  };
+
+  useEffect(() => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      (event, session) => {
+        setSession(session);
+        setUser(session?.user ?? null);
+
+        if (session?.user) {
+          setTimeout(() => {
+            fetchProfile(session.user.id);
+            fetchRoles(session.user.id);
+          }, 0);
+        } else {
+          setProfile(null);
+          setRoles([]);
+        }
+      }
+    );
+
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+
+      if (session?.user) {
+        setTimeout(() => {
+          fetchProfile(session.user.id);
+          fetchRoles(session.user.id);
+        }, 0);
+      }
+      setLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = (userId: string, role: UserRole) => {
-    // Simuler un utilisateur connecté
-    const newUser: User = {
-      id: parseInt(userId),
-      nom: "Utilisateur",
-      prenom: "Connecté",
-      email: "utilisateur@example.com",
-      role: role,
-      dateCreation: new Date().toISOString(),
-      permissions: [],
-      pin: ""
-    };
-    
-    setUser(newUser);
-    localStorage.setItem("authToken", `simulated_jwt_token_${userId}_${Date.now()}`);
-    
-    // Rediriger vers la page d'accueil appropriée selon le rôle
-    switch (role) {
-      case "administrateur":
-        navigate("/admin");
-        break;
-      case "formateur":
-        navigate("/formateur");
-        break;
-      case "personnel":
-        navigate("/personnel");
-        break;
-      case "hse":
-        navigate("/hse/verification-documents");
-        break;
-      case "sous-traitant":
-        navigate("/personnel/formations");
-        break;
-      case "rh":
-        navigate("/formations");
-        break;
-      default:
-        navigate("/");
-    }
-    
-    toast({
-      title: "Connexion réussie",
-      description: `Bienvenue, ${newUser.prenom} ${newUser.nom}`,
-    });
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    navigate('/auth');
   };
 
-  const logout = async () => {
-    try {
-      await authService.logout();
-      setUser(null);
-      localStorage.removeItem("authToken");
-      navigate("/login");
-      toast({
-        title: "Déconnexion réussie",
-        description: "À bientôt !",
-      });
-    } catch (error) {
-      console.error("Erreur lors de la déconnexion:", error);
-      toast({
-        variant: "destructive",
-        title: "Erreur",
-        description: "Un problème est survenu lors de la déconnexion",
-      });
-    }
+  const hasRole = (role: string) => {
+    return roles.some((r) => r.role === role);
   };
 
-  const checkPermission = async (permission: string): Promise<boolean> => {
-    if (!user) return false;
-    return await authService.checkPermission(user.id, permission);
+  const hasAnyRole = (rolesToCheck: string[]) => {
+    return roles.some((r) => rolesToCheck.includes(r.role));
   };
 
   return (
-    <AuthContext.Provider value={{ user, isLoading, login, logout, checkPermission }}>
+    <AuthContext.Provider
+      value={{
+        user,
+        session,
+        profile,
+        roles,
+        loading,
+        signOut,
+        hasRole,
+        hasAnyRole,
+      }}
+    >
       {children}
     </AuthContext.Provider>
   );
-};
+}
 
-export const useAuth = (): AuthContextType => {
+export function useAuth() {
   const context = useContext(AuthContext);
   if (context === undefined) {
-    throw new Error("useAuth doit être utilisé à l'intérieur d'un AuthProvider");
+    throw new Error('useAuth must be used within an AuthProvider');
   }
   return context;
-};
+}
