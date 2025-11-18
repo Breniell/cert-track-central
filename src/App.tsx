@@ -1,52 +1,30 @@
-
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { MoodleProvider } from "@/contexts/MoodleContext";
-import { ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css';
+import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 
-// Pages CIMENCAM essentielles
-import TrainerDashboard from "./pages/TrainerDashboard";
-import LearnerDashboard from "./pages/LearnerDashboard";
-import RHDashboard from "./pages/RHDashboard";
+const queryClient = new QueryClient();
 
-const App = () => {
-  const [queryClient] = useState(() => new QueryClient());
-
-  return (
-    <QueryClientProvider client={queryClient}>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
+    <TooltipProvider>
+      <Toaster />
+      <Sonner />
       <BrowserRouter>
-        <MoodleProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
-            <ToastContainer
-              position="top-right"
-              autoClose={3000}
-              hideProgressBar={false}
-              newestOnTop={false}
-              closeOnClick
-              rtl={false}
-              pauseOnFocusLoss
-              draggable
-              pauseOnHover
-            />
-            <Routes>
-              <Route path="/trainer" element={<TrainerDashboard />} />
-              <Route path="/learner" element={<LearnerDashboard />} />
-              <Route path="/rh" element={<RHDashboard />} />
-              <Route path="/" element={<Navigate to="/learner" replace />} />
-              <Route path="*" element={<Navigate to="/learner" replace />} />
-            </Routes>
-          </TooltipProvider>
-        </MoodleProvider>
+        <AuthProvider>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route path="/" element={<Dashboard />} />
+            <Route path="*" element={<Navigate to="/" replace />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
-    </QueryClientProvider>
-  );
-};
+    </TooltipProvider>
+  </QueryClientProvider>
+);
 
 export default App;
