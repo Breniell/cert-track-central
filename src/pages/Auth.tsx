@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -7,7 +7,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { useToast } from '@/hooks/use-toast';
 import { supabase } from '@/integrations/supabase/client';
-import { Building2, Mail, Lock, User } from 'lucide-react';
+import { Building2, Mail, Lock, User, Info } from 'lucide-react';
 
 export default function Auth() {
   const [loading, setLoading] = useState(false);
@@ -90,7 +90,28 @@ export default function Auth() {
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-ciment-green/10 via-background to-ciment-green-dark/10 p-4">
-      <Card className="w-full max-w-md border-ciment-green/20 shadow-lg">
+      <div className="w-full max-w-md space-y-4">
+        {/* Info banner */}
+        <Card className="border-primary/20 bg-primary/5">
+          <CardContent className="pt-6">
+            <div className="flex items-start gap-3">
+              <Info className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
+              <div className="text-sm">
+                <p className="font-medium text-primary mb-1">Première visite ?</p>
+                <p className="text-muted-foreground mb-2">
+                  Commencez par créer des comptes de test pour explorer toutes les fonctionnalités.
+                </p>
+                <Link to="/setup">
+                  <Button variant="outline" size="sm" className="mt-2">
+                    Configurer les données de test
+                  </Button>
+                </Link>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-ciment-green/20 shadow-lg">
         <CardHeader className="space-y-1 text-center">
           <div className="flex justify-center mb-4">
             <div className="w-16 h-16 bg-primary rounded-full flex items-center justify-center">
@@ -211,7 +232,8 @@ export default function Auth() {
             </TabsContent>
           </Tabs>
         </CardContent>
-      </Card>
+        </Card>
+      </div>
     </div>
   );
 }
