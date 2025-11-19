@@ -1,142 +1,118 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, Clock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, Clock, BookOpen, FileText, Award } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
+import { AttendanceList } from '@/components/attendance/AttendanceList';
+import { format } from 'date-fns';
+import { fr } from 'date-fns/locale';
 
-export default function FormateurDashboard() {
+export function FormateurDashboard() {
+  const [mySessions, setMySessions] = useState<any[]>([]);
+  const [selectedSession, setSelectedSession] = useState<any>(null);
+  const { user } = useAuth();
+
+  useEffect(() => {
+    loadMySessions();
+  }, []);
+
+  async function loadMySessions() {
+    const { data: formateur } = await supabase.from('formateurs').select('id').eq('user_id', user!.id).single();
+
+    if (formateur) {
+      const { data: sessions } = await supabase
+        .from('training_sessions')
+        .select('*, sites(name)')
+        .eq('formateur_id', formateur.id)
+        .order('start_datetime');
+
+      if (sessions) setMySessions(sessions);
+    }
+  }
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-3xl font-bold">Tableau de Bord Formateur</h1>
-        <p className="text-muted-foreground">Mes sessions et activités de formation</p>
+        <h1 className="text-3xl font-bold">Tableau de bord Formateur</h1>
+        <p className="text-muted-foreground">Mes sessions et gestion de présence</p>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Mes Sessions</CardTitle>
+            <CardTitle className="text-sm font-medium">Mes sessions</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Sessions assignées</p>
+            <div className="text-2xl font-bold">{mySessions.length}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Apprenants</CardTitle>
-            <Users className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Total formés</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Heures Enseignées</CardTitle>
+            <CardTitle className="text-sm font-medium">Prochaine session</CardTitle>
             <Clock className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0h</div>
-            <p className="text-xs text-muted-foreground">Ce mois-ci</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Certifications</CardTitle>
-            <Award className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Mes certifications</p>
+            <div className="text-sm font-bold">
+              {mySessions[0] ? format(new Date(mySessions[0].start_datetime), 'dd MMM', { locale: fr }) : '-'}
+            </div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Mes Sessions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button className="w-full justify-start">
-              Prochaines sessions
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Sessions en cours
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Historique des sessions
-            </Button>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="sessions">
+        <TabsList>
+          <TabsTrigger value="sessions">Mes sessions</TabsTrigger>
+          <TabsTrigger value="presence">Gestion présence</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Présence et Évaluation
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              Marquer la présence
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Évaluer les apprenants
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Génerer QR Code présence
-            </Button>
-          </CardContent>
-        </Card>
+        <TabsContent value="sessions">
+          <div className="space-y-4">
+            {mySessions.map((session) => (
+              <Card key={session.id}>
+                <CardHeader>
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <CardTitle>{session.title}</CardTitle>
+                      <p className="text-sm text-muted-foreground">{session.description}</p>
+                    </div>
+                    <Badge variant={session.type === 'HSE' ? 'destructive' : 'default'}>{session.type}</Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex items-center justify-between">
+                    <div className="text-sm">
+                      <p>
+                        <strong>Date:</strong> {format(new Date(session.start_datetime), 'dd MMMM yyyy', { locale: fr })}
+                      </p>
+                      <p>
+                        <strong>Lieu:</strong> {session.location}
+                      </p>
+                    </div>
+                    <Button onClick={() => setSelectedSession(session)}>Gérer présence</Button>
+                  </div>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Mes Disponibilités
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              Déclarer mes disponibilités
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Mes créneaux validés
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Modifier mes disponibilités
-            </Button>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Ressources et Documents
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              Supports de formation
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Mes habilitations
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Rapports de formation
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="presence">
+          {selectedSession ? (
+            <AttendanceList sessionId={selectedSession.id} />
+          ) : (
+            <Card>
+              <CardContent className="py-8 text-center text-muted-foreground">
+                Sélectionnez une session pour gérer la présence
+              </CardContent>
+            </Card>
+          )}
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }

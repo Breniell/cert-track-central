@@ -4,9 +4,9 @@ import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Building2, LogOut } from 'lucide-react';
 import SuperAdminDashboard from './dashboards/SuperAdminDashboard';
-import HRDashboard from './dashboards/HRDashboard';
+import { HRDashboard } from './dashboards/HRDashboard';
 import HSEDashboard from './dashboards/HSEDashboard';
-import FormateurDashboard from './dashboards/FormateurDashboard';
+import { FormateurDashboard } from './dashboards/FormateurDashboard';
 import ApprenantDashboard from './dashboards/ApprenantDashboard';
 import ManagerDashboard from './dashboards/ManagerDashboard';
 
