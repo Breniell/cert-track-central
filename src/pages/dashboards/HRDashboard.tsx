@@ -1,144 +1,128 @@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Calendar, Users, BookOpen, TrendingUp, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
-import { Calendar, Users, BookOpen, FileText, UserPlus, CheckCircle } from 'lucide-react';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { SessionForm } from '@/components/sessions/SessionForm';
+import { SessionCalendar } from '@/components/sessions/SessionCalendar';
+import { SessionsList } from '@/components/sessions/SessionsList';
+import { ValidationQueue } from '@/components/sessions/ValidationQueue';
 
-export default function HRDashboard() {
+export function HRDashboard() {
+  const [stats, setStats] = useState<any>({});
+  const [showSessionForm, setShowSessionForm] = useState(false);
+
+  useEffect(() => {
+    loadStats();
+  }, []);
+
+  async function loadStats() {
+    const { data: sessions } = await supabase.from('training_sessions').select('*');
+    const { data: profiles } = await supabase.from('profiles').select('*');
+    const { data: formateurs } = await supabase.from('formateurs').select('*').eq('active', true);
+    const { data: attendances } = await supabase.from('attendances').select('*');
+
+    const present = attendances?.filter((a) => !a.absent).length || 0;
+    const total = attendances?.length || 1;
+
+    setStats({
+      sessions: sessions?.length || 0,
+      profiles: profiles?.length || 0,
+      formateurs: formateurs?.length || 0,
+      attendance: Math.round((present / total) * 100),
+    });
+  }
+
   return (
     <div className="space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">Tableau de Bord RH</h1>
-        <p className="text-muted-foreground">Gestion des formations et du personnel</p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h1 className="text-3xl font-bold">Tableau de bord RH</h1>
+          <p className="text-muted-foreground">Gestion des formations et des collaborateurs</p>
+        </div>
+        <Button onClick={() => setShowSessionForm(true)}>
+          <Plus className="mr-2 h-4 w-4" />
+          Créer une session
+        </Button>
       </div>
 
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Sessions ce Mois</CardTitle>
+            <CardTitle className="text-sm font-medium">Sessions planifiées</CardTitle>
             <Calendar className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Sessions planifiées</p>
+            <div className="text-2xl font-bold">{stats.sessions}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Participants</CardTitle>
+            <CardTitle className="text-sm font-medium">Collaborateurs</CardTitle>
             <Users className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Inscrits actifs</p>
+            <div className="text-2xl font-bold">{stats.profiles}</div>
           </CardContent>
         </Card>
 
         <Card>
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">En Attente</CardTitle>
-            <FileText className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Sessions à valider</p>
-          </CardContent>
-        </Card>
-
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Formateurs</CardTitle>
+            <CardTitle className="text-sm font-medium">Formateurs actifs</CardTitle>
             <BookOpen className="h-4 w-4 text-muted-foreground" />
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">0</div>
-            <p className="text-xs text-muted-foreground">Formateurs actifs</p>
+            <div className="text-2xl font-bold">{stats.formateurs}</div>
+          </CardContent>
+        </Card>
+
+        <Card>
+          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+            <CardTitle className="text-sm font-medium">Taux de présence</CardTitle>
+            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          </CardHeader>
+          <CardContent>
+            <div className="text-2xl font-bold">{stats.attendance}%</div>
           </CardContent>
         </Card>
       </div>
 
-      <div className="grid gap-4 md:grid-cols-2">
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Calendar className="h-5 w-5" />
-              Gestion des Sessions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button className="w-full justify-start">
-              <Calendar className="h-4 w-4 mr-2" />
-              Créer une session de formation
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Calendrier des formations
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Sessions à valider
-            </Button>
-          </CardContent>
-        </Card>
+      <Tabs defaultValue="calendar">
+        <TabsList>
+          <TabsTrigger value="calendar">Calendrier</TabsTrigger>
+          <TabsTrigger value="sessions">Sessions</TabsTrigger>
+          <TabsTrigger value="validation">Validation</TabsTrigger>
+        </TabsList>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Users className="h-5 w-5" />
-              Gestion des Inscriptions
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              <UserPlus className="h-4 w-4 mr-2" />
-              Inscrire des participants
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Listes d'émargement
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Certificats de formation
-            </Button>
-          </CardContent>
-        </Card>
+        <TabsContent value="calendar">
+          <SessionCalendar />
+        </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <BookOpen className="h-5 w-5" />
-              Formateurs
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              Gérer les formateurs
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Habilitations en attente
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Disponibilités formateurs
-            </Button>
-          </CardContent>
-        </Card>
+        <TabsContent value="sessions">
+          <SessionsList />
+        </TabsContent>
 
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <FileText className="h-5 w-5" />
-              Rapports et Statistiques
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-2">
-            <Button variant="outline" className="w-full justify-start">
-              Taux de présence
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Heures de formation
-            </Button>
-            <Button variant="outline" className="w-full justify-start">
-              Export des données
-            </Button>
-          </CardContent>
-        </Card>
-      </div>
+        <TabsContent value="validation">
+          <ValidationQueue />
+        </TabsContent>
+      </Tabs>
+
+      <Dialog open={showSessionForm} onOpenChange={setShowSessionForm}>
+        <DialogContent className="max-w-2xl">
+          <DialogHeader>
+            <DialogTitle>Créer une session de formation</DialogTitle>
+          </DialogHeader>
+          <SessionForm
+            onSuccess={() => {
+              setShowSessionForm(false);
+              loadStats();
+            }}
+          />
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
